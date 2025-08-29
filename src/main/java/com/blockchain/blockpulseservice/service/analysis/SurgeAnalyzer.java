@@ -1,7 +1,7 @@
 package com.blockchain.blockpulseservice.service.analysis;
 
-import com.blockchain.blockpulseservice.model.AnalysisContext;
-import com.blockchain.blockpulseservice.model.PatternType;
+import com.blockchain.blockpulseservice.model.domain.AnalysisContext;
+import com.blockchain.blockpulseservice.model.domain.PatternType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

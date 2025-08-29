@@ -1,11 +1,11 @@
 package com.blockchain.blockpulseservice.service;
 
 import com.blockchain.blockpulseservice.client.rest.MempoolStatsUpdater;
+import com.blockchain.blockpulseservice.model.domain.TransactionWindowSnapshot;
 import com.blockchain.blockpulseservice.model.dto.AnalyzedTransactionDTO;
 import com.blockchain.blockpulseservice.model.Transaction;
-import com.blockchain.blockpulseservice.model.AnalysisContext;
+import com.blockchain.blockpulseservice.model.domain.AnalysisContext;
 import com.blockchain.blockpulseservice.service.analysis.TransactionAnalyzer;
-import com.blockchain.blockpulseservice.model.TransactionWindowSnapshot;
 import com.blockchain.blockpulseservice.model.TransactionWindowSnapshotDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

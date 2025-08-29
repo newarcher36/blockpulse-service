@@ -1,7 +1,7 @@
 package com.blockchain.blockpulseservice.model.dto;
 
-import com.blockchain.blockpulseservice.model.FeeClassification;
-import com.blockchain.blockpulseservice.model.PatternType;
+import com.blockchain.blockpulseservice.model.domain.FeeClassification;
+import com.blockchain.blockpulseservice.model.domain.PatternType;
 import com.blockchain.blockpulseservice.model.TransactionWindowSnapshotDTO;
 import lombok.Builder;
 

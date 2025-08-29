@@ -1,7 +1,7 @@
 package com.blockchain.blockpulseservice.service.sliding_window;
 
 import com.blockchain.blockpulseservice.model.Transaction;
-import com.blockchain.blockpulseservice.model.TransactionWindowSnapshot;
+import com.blockchain.blockpulseservice.model.domain.TransactionWindowSnapshot;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
