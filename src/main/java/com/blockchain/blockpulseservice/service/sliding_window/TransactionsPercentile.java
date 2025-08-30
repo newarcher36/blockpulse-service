@@ -14,8 +14,8 @@ public class TransactionsPercentile {
         return transactions.get(Math.max(0,index)).feePerVSize();
     }
 
-    public int getNumOfOutliers(double outliersPercentileThreshold, int totalTransactions) {
-        return getPercentileIndex(outliersPercentileThreshold, totalTransactions);
+    public int getNumOfOutliers(double outlierPercentileThreshold, int totalTransactions) {
+        return getPercentileIndex(outlierPercentileThreshold, totalTransactions);
     }
 
     public BigDecimal getMedianFeeRate(List<Transaction> transactions) {
@@ -23,7 +23,6 @@ public class TransactionsPercentile {
         int mid = size / 2;
 
         if (size % 2 == 0) {
-            // Even number of elements → average of two middle ones
             BigDecimal lowerMid = transactions.get(mid - 1).feePerVSize();
             BigDecimal upperMid = transactions.get(mid).feePerVSize();
             return lowerMid.add(upperMid).divide(BigDecimal.valueOf(2), RoundingMode.HALF_UP);

@@ -1,5 +1,7 @@
-package com.blockchain.blockpulseservice.model;
+package com.blockchain.blockpulseservice.model.domain;
 
+import com.blockchain.blockpulseservice.model.MempoolStats;
+import com.blockchain.blockpulseservice.model.Transaction;
 import lombok.Builder;
 import lombok.Value;
 
@@ -13,7 +15,7 @@ public class AnalysisContext {
     Transaction newTransaction;
     TransactionWindowSnapshot transactionWindowSnapshot;
     MempoolStats mempoolStats;
-    //output
+    // output
     @Builder.Default
     Set<PatternType> patterns = new HashSet<>();
     FeeClassification feeClassification;
