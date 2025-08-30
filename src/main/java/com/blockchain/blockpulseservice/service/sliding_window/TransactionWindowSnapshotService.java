@@ -1,6 +1,6 @@
 package com.blockchain.blockpulseservice.service.sliding_window;
 
-import com.blockchain.blockpulseservice.model.Transaction;
+import com.blockchain.blockpulseservice.model.domain.Transaction;
 import com.blockchain.blockpulseservice.model.domain.TransactionWindowSnapshot;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,9 +14,9 @@ import java.util.List;
 @Service
 public class TransactionWindowSnapshotService {
     private final TransactionsPercentile percentile;
-    private final double outliersPercentileThreshold;
     private static final double FIRST_QUARTILE_THRESHOLD = 0.25;
     private static final double THIRD_QUARTILE_THRESHOLD = 0.75;
+    private final double outliersPercentileThreshold;
     private BigDecimal sum = BigDecimal.ZERO;
 
     public TransactionWindowSnapshotService(TransactionsPercentile percentile,
@@ -47,10 +47,10 @@ public class TransactionWindowSnapshotService {
                 totalTransactions,
                 avgFeePerVByte,
                 percentile.getMedianFeeRate(sortedTransactions),
-                percentile.getNumOfOutliers(outliersPercentileThreshold, totalTransactions),
-                percentile.getPercentileFeeRate(outliersPercentileThreshold, sortedTransactions),
-                percentile.getPercentileFeeRate(FIRST_QUARTILE_THRESHOLD, sortedTransactions),
-                percentile.getPercentileFeeRate(THIRD_QUARTILE_THRESHOLD, sortedTransactions)
+                percentile.getNumOfOutliers(outliersPercentileThreshold),
+                percentile.getPercentileValue(outliersPercentileThreshold, sortedTransactions),
+                percentile.getPercentileValue(FIRST_QUARTILE_THRESHOLD, sortedTransactions),
+                percentile.getPercentileValue(THIRD_QUARTILE_THRESHOLD, sortedTransactions)
         );
     }
 }

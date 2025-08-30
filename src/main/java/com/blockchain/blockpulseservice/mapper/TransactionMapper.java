@@ -1,7 +1,7 @@
 package com.blockchain.blockpulseservice.mapper;
 
+import com.blockchain.blockpulseservice.model.domain.Transaction;
 import com.blockchain.blockpulseservice.model.dto.MempoolTransactionsDTOWrapper;
-import com.blockchain.blockpulseservice.model.Transaction;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

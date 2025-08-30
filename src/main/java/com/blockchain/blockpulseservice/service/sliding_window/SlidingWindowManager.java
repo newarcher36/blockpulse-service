@@ -1,6 +1,6 @@
 package com.blockchain.blockpulseservice.service.sliding_window;
 
-import com.blockchain.blockpulseservice.model.Transaction;
+import com.blockchain.blockpulseservice.model.domain.Transaction;
 import com.blockchain.blockpulseservice.service.TransactionAnalyzerService;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -9,6 +9,7 @@ import org.apache.commons.collections4.list.TreeList;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -20,7 +21,7 @@ import static java.math.BigDecimal.ZERO;
 @Slf4j
 @Component
 public class SlidingWindowManager {
-    private final TreeList<Transaction> sortedTransactions = new TreeList<>();
+    private final TreeList<BigDecimal> sortedFee = new TreeList<>();
     private final BlockingQueue<Transaction> transactionQueue = new LinkedBlockingQueue<>();
     private final int slidingWindowSize;
     private final TransactionAnalyzerService analyzerService;
@@ -49,10 +50,10 @@ public class SlidingWindowManager {
 
                     resizeSortedTransactionsPerFeeRate();
 
-                    sortedTransactions.add(tx);
+                    sortedFee.add(tx.feePerVSize());
                     transactionWindowSnapshotService.addFee(tx.feePerVSize());
 
-                    var snapshot = transactionWindowSnapshotService.takeCurrentWindowSnapshot(sortedTransactions);
+                    var snapshot = transactionWindowSnapshotService.takeCurrentWindowSnapshot(sortedFee);
                     analyzerService.processTransaction(tx, snapshot);
                 } catch (InterruptedException e) {
                     log.warn("Thread interrupted while waiting for transaction", e);
@@ -90,10 +91,10 @@ public class SlidingWindowManager {
     }
 
     private void resizeSortedTransactionsPerFeeRate() {
-        if (sortedTransactions.size() >= slidingWindowSize) {
-            var oldestTx = sortedTransactions.removeFirst();
-            transactionWindowSnapshotService.subtractFee(oldestTx.feePerVSize());
-            log.debug("Sliding window is full, removing oldest transaction: {}", oldestTx.hash());
+        if (sortedFee.size() >= slidingWindowSize) {
+            var oldestFee = sortedFee.removeFirst();
+            transactionWindowSnapshotService.subtractFee(oldestFee);
+            log.debug("Sliding window is full, removing oldest fee: {}", oldestFee);
         }
     }
 

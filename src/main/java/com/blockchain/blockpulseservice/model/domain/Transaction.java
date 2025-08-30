@@ -1,4 +1,4 @@
-package com.blockchain.blockpulseservice.model;
+package com.blockchain.blockpulseservice.model.domain;
 
 import java.math.BigDecimal;
 import java.time.Instant;

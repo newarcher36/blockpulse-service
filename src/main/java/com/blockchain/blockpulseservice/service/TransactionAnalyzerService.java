@@ -1,9 +1,9 @@
 package com.blockchain.blockpulseservice.service;
 
 import com.blockchain.blockpulseservice.client.rest.MempoolStatsUpdater;
+import com.blockchain.blockpulseservice.model.domain.Transaction;
 import com.blockchain.blockpulseservice.model.domain.TransactionWindowSnapshot;
 import com.blockchain.blockpulseservice.model.dto.AnalyzedTransactionDTO;
-import com.blockchain.blockpulseservice.model.Transaction;
 import com.blockchain.blockpulseservice.model.domain.AnalysisContext;
 import com.blockchain.blockpulseservice.service.analysis.TransactionAnalyzer;
 import com.blockchain.blockpulseservice.model.TransactionWindowSnapshotDTO;

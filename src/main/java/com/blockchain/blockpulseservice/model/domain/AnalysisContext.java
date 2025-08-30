@@ -1,7 +1,6 @@
 package com.blockchain.blockpulseservice.model.domain;
 
 import com.blockchain.blockpulseservice.model.MempoolStats;
-import com.blockchain.blockpulseservice.model.Transaction;
 import lombok.Builder;
 import lombok.Value;
 
