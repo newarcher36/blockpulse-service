@@ -4,10 +4,11 @@ import com.blockchain.blockpulseservice.client.ws.manager.ConnectionStateManager
 import com.blockchain.blockpulseservice.client.ws.manager.ReconnectionManager;
 import com.blockchain.blockpulseservice.mapper.TransactionMapper;
 import com.blockchain.blockpulseservice.model.dto.MempoolTransactionsDTOWrapper;
-import com.blockchain.blockpulseservice.service.sliding_window.SlidingWindowManager;
+import com.blockchain.blockpulseservice.event.NewTransactionEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.client.WebSocketClient;
@@ -20,7 +21,7 @@ import java.net.URI;
 public class MempoolSpaceWebSocketClient extends BaseWebSocketSessionClient {
     private final TransactionMapper transactionMapper;
     private final ObjectMapper objectMapper;
-    private final SlidingWindowManager slidingWindowManager;
+    private final ApplicationEventPublisher eventPublisher;
 
     public MempoolSpaceWebSocketClient(TransactionMapper transactionMapper,
                                        ObjectMapper objectMapper,
@@ -31,7 +32,7 @@ public class MempoolSpaceWebSocketClient extends BaseWebSocketSessionClient {
                                        WebSocketMessageSender messageSender,
                                        @Value("${app.mempool.space.websocket.track-mempool-api-url}") String serverUri,
                                        @Value("${app.websocket.message-size-limit}") int messageSizeLimit,
-                                       SlidingWindowManager slidingWindowManager) {
+                                       ApplicationEventPublisher eventPublisher) {
         super(URI.create(serverUri),
                 messageSizeLimit,
                 webSocketClient,
@@ -41,7 +42,7 @@ public class MempoolSpaceWebSocketClient extends BaseWebSocketSessionClient {
                 messageSender);
         this.transactionMapper = transactionMapper;
         this.objectMapper = objectMapper;
-        this.slidingWindowManager = slidingWindowManager;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -59,7 +60,9 @@ public class MempoolSpaceWebSocketClient extends BaseWebSocketSessionClient {
             var mempoolTransactions = txWrapper.mempoolTransactions();
             if (mempoolTransactions != null) {
                 var txs = transactionMapper.mapToTransaction(mempoolTransactions.added());
-                slidingWindowManager.addTransaction(txs);
+                for (var tx : txs) {
+                    eventPublisher.publishEvent(new NewTransactionEvent(tx));
+                }
             }
         } catch (Exception e) {
             log.error("Error processing blockchain.info message: {}", message, e);
