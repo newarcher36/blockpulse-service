@@ -24,16 +24,13 @@ public class SlidingWindowManager {
     private final int slidingWindowSize;
     private final TransactionAnalyzerService analyzerService;
     private final TransactionWindowSnapshotService transactionWindowSnapshotService;
-    private final TransactionCsvWriter csvWriter;
 
     public SlidingWindowManager(@Value("${app.analysis.tx.sliding-window-size:1000}") int slidingWindowSize,
                                 TransactionAnalyzerService analyzerService,
-                                TransactionWindowSnapshotService transactionWindowSnapshotService,
-                                TransactionCsvWriter csvWriter) {
+                                TransactionWindowSnapshotService transactionWindowSnapshotService) {
         this.slidingWindowSize = slidingWindowSize;
         this.analyzerService = analyzerService;
         this.transactionWindowSnapshotService = transactionWindowSnapshotService;
-        this.csvWriter = csvWriter;
     }
 
     @EventListener
@@ -49,8 +46,6 @@ public class SlidingWindowManager {
         sortedFees.add(tx.feePerVSize());
         transactionWindowSnapshotService.addFee(tx.feePerVSize());
         feeInsertionOrder.addLast(tx.feePerVSize());
-
-        csvWriter.append(tx);
 
         var snapshot = transactionWindowSnapshotService.takeCurrentWindowSnapshot(ImmutableList.copyOf(sortedFees));
         analyzerService.processTransaction(tx, snapshot);

@@ -23,7 +23,7 @@ public class FeeWindowStatsSummary {
         int upperIndex = Collections.binarySearch(sortedFees, upperEndpoint);
         lowerIndex = lowerIndex < 0 ? Math.abs(lowerIndex) - 1 : lowerIndex;
         upperIndex = upperIndex < 0 ? Math.abs(upperIndex) - 1 : upperIndex;
-        return upperIndex - lowerIndex + 1;
+        return sortedFees.size() - upperIndex + lowerIndex;
     }
 
     public BigDecimal calculateAvg(BigDecimal sum, int feesCount) {
@@ -38,7 +38,7 @@ public class FeeWindowStatsSummary {
         return calculateTukeyFences(fees, TUKEY_FENCE_K_CONSTANT);
     }
 
-    public BigDecimal calculatePercentile(double percentileThreshold, List<BigDecimal> fees) {
+    private BigDecimal calculatePercentile(double percentileThreshold, List<BigDecimal> fees) {
         double percentileValue = Quantile
                 .withDefaults()
                 .with(Quantile.EstimationMethod.HF7)
@@ -51,6 +51,12 @@ public class FeeWindowStatsSummary {
                 calculatePercentile(FIRST_QUARTILE_THRESHOLD, sortedFees),
                 calculatePercentile(THIRD_QUARTILE_THRESHOLD, sortedFees)
         );
+    }
+
+    public BigDecimal calculateIQRTest(List<BigDecimal> sortedFees) {
+        BigDecimal q1 = calculatePercentile(FIRST_QUARTILE_THRESHOLD, sortedFees);
+        BigDecimal q3 = calculatePercentile(THIRD_QUARTILE_THRESHOLD, sortedFees);
+        return q3.subtract(q1);
     }
 
     private Range<BigDecimal> calculateTukeyFences(List<BigDecimal> fees, double k) {
