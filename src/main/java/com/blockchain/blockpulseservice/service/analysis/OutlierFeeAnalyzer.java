@@ -4,7 +4,7 @@ import com.blockchain.blockpulseservice.model.domain.AnalysisContext;
 import org.springframework.stereotype.Component;
 
 @Component
-public class OutlierAnalyzer extends BaseTransactionAnalyzer {
+public class OutlierFeeAnalyzer extends BaseFeeAnalyzer {
     @Override
     protected AnalysisContext doAnalyze(AnalysisContext context) {
         var feePerVSize = context.getNewTransaction().feePerVSize();

@@ -6,7 +6,7 @@ import com.blockchain.blockpulseservice.model.domain.Transaction;
 import com.blockchain.blockpulseservice.model.domain.TransactionWindowSnapshot;
 import com.blockchain.blockpulseservice.event.AnalyzedTransactionEvent;
 import com.blockchain.blockpulseservice.model.dto.TransactionWindowSnapshotDTO;
-import com.blockchain.blockpulseservice.service.analysis.TransactionAnalyzer;
+import com.blockchain.blockpulseservice.service.analysis.FeeAnalyzer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RequiredArgsConstructor
 public class TransactionAnalyzerService {
     private final AtomicInteger txSequence = new AtomicInteger(0);
-    private final TransactionAnalyzer analysisChain;
+    private final FeeAnalyzer analysisChain;
     private final AnalysisStream analysisStream;
     private final MempoolStatsUpdater mempoolStatsUpdater;
 
@@ -51,7 +51,7 @@ public class TransactionAnalyzerService {
                 .size(context.getNewTransaction().vSize())
                 .timestamp(context.getNewTransaction().time())
                 .patternTypes(context.getPatterns())
-                .feeClassification(context.getFeeClassification())
+                .priceTier(context.getPriceTier())
                 .isOutlier(context.isOutlier())
                 .windowSnapshot(mapToTransactionWindowSnapshotDTO(context.getTransactionWindowSnapshot()))
                 .build();
@@ -59,7 +59,7 @@ public class TransactionAnalyzerService {
 
     private TransactionWindowSnapshotDTO mapToTransactionWindowSnapshotDTO(TransactionWindowSnapshot windowSnapshot) {
         return new TransactionWindowSnapshotDTO(
-                windowSnapshot.transactionsCount(),
+                windowSnapshot.transactionCount(),
                 windowSnapshot.outliersCount(),
                 windowSnapshot.avgFeePerVByte(),
                 windowSnapshot.median()

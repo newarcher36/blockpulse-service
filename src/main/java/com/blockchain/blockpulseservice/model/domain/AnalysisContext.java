@@ -17,7 +17,7 @@ public class AnalysisContext {
     // output
     @Builder.Default
     Set<PatternType> patterns = new HashSet<>();
-    FeeClassification feeClassification;
+    PriceTier priceTier;
     @Builder.Default
     boolean isOutlier = false;
 

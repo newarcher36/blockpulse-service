@@ -1,6 +1,6 @@
 package com.blockchain.blockpulseservice.event;
 
-import com.blockchain.blockpulseservice.model.domain.FeeClassification;
+import com.blockchain.blockpulseservice.model.domain.PriceTier;
 import com.blockchain.blockpulseservice.model.domain.PatternType;
 import com.blockchain.blockpulseservice.model.dto.TransactionWindowSnapshotDTO;
 import lombok.Builder;
@@ -18,6 +18,6 @@ public record AnalyzedTransactionEvent(String id,
                                        int size,
                                        Instant timestamp,
                                        Set<PatternType> patternTypes,
-                                       FeeClassification feeClassification,
+                                       PriceTier priceTier,
                                        boolean isOutlier,
                                        TransactionWindowSnapshotDTO windowSnapshot) {}

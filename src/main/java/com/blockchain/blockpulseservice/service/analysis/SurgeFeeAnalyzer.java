@@ -10,10 +10,10 @@ import java.math.BigDecimal;
 
 @Slf4j
 @Component
-public class SurgeAnalyzer extends BaseTransactionAnalyzer {
+public class SurgeFeeAnalyzer extends BaseFeeAnalyzer {
     private final double mempoolThreshold;
 
-    public SurgeAnalyzer(@Value("${app.analysis.tx.mempool-congestion-vbytes-threshold}") double mempoolThreshold) {
+    public SurgeFeeAnalyzer(@Value("${app.analysis.tx.mempool-congestion-vbytes-threshold}") double mempoolThreshold) {
         this.mempoolThreshold = mempoolThreshold;
     }
 

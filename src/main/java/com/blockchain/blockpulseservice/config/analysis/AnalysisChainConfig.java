@@ -1,9 +1,9 @@
 package com.blockchain.blockpulseservice.config.analysis;
 
-import com.blockchain.blockpulseservice.service.analysis.FeeClassificationAnalyzer;
-import com.blockchain.blockpulseservice.service.analysis.OutlierAnalyzer;
-import com.blockchain.blockpulseservice.service.analysis.SurgeAnalyzer;
-import com.blockchain.blockpulseservice.service.analysis.TransactionAnalyzer;
+import com.blockchain.blockpulseservice.service.analysis.PriceTierAnalyzer;
+import com.blockchain.blockpulseservice.service.analysis.OutlierFeeAnalyzer;
+import com.blockchain.blockpulseservice.service.analysis.SurgeFeeAnalyzer;
+import com.blockchain.blockpulseservice.service.analysis.FeeAnalyzer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -11,12 +11,12 @@ import org.springframework.context.annotation.Configuration;
 public class AnalysisChainConfig {
 
     @Bean
-    public TransactionAnalyzer analysisChain(OutlierAnalyzer outlierAnalyzer,
-                                             SurgeAnalyzer surgeAnalyzer,
-                                             FeeClassificationAnalyzer feeClassificationAnalyzer) {
+    public FeeAnalyzer analysisChain(OutlierFeeAnalyzer outlierAnalyzer,
+                                     SurgeFeeAnalyzer surgeFeeAnalyzer,
+                                     PriceTierAnalyzer priceTierAnalyzer) {
         outlierAnalyzer
-                .setNext(surgeAnalyzer)
-                .setNext(feeClassificationAnalyzer);
+                .setNext(surgeFeeAnalyzer)
+                .setNext(priceTierAnalyzer);
 
         return outlierAnalyzer;
     }

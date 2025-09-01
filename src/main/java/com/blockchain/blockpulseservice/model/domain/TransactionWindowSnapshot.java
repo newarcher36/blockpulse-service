@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 
 import static java.math.BigDecimal.ZERO;
 
-public record TransactionWindowSnapshot(int transactionsCount,
+public record TransactionWindowSnapshot(int transactionCount,
                                         int outliersCount,
                                         BigDecimal avgFeePerVByte,
                                         BigDecimal median,

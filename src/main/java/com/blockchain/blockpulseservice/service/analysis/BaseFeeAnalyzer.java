@@ -2,11 +2,11 @@ package com.blockchain.blockpulseservice.service.analysis;
 
 import com.blockchain.blockpulseservice.model.domain.AnalysisContext;
 
-public abstract class BaseTransactionAnalyzer implements TransactionAnalyzer {
-    private TransactionAnalyzer next;
+public abstract class BaseFeeAnalyzer implements FeeAnalyzer {
+    private FeeAnalyzer next;
 
     @Override
-    public TransactionAnalyzer setNext(TransactionAnalyzer next) {
+    public FeeAnalyzer setNext(FeeAnalyzer next) {
         this.next = next;
         return next;
     }
