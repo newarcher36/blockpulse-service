@@ -34,6 +34,6 @@ public class SurgeAnalyzer extends BaseTransactionAnalyzer {
     }
 
     private boolean isFarBeyondRecommendedFastFee(BigDecimal feePerVSize, double fastFeePerVByte) {
-        return (feePerVSize.compareTo(BigDecimal.valueOf(fastFeePerVByte)) > 0);
+        return feePerVSize.compareTo(BigDecimal.valueOf(fastFeePerVByte)) > 0;
     }
 }

@@ -48,5 +48,4 @@ app:
   analysis:
     tx:
       sliding-window-size: 1000
-      outliers-percentile-threshold: 0.99
       mempool-congestion-vbytes-threshold: 100

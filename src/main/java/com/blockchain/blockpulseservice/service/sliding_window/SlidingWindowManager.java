@@ -2,10 +2,11 @@ package com.blockchain.blockpulseservice.service.sliding_window;
 
 import com.blockchain.blockpulseservice.model.domain.Transaction;
 import com.blockchain.blockpulseservice.service.TransactionAnalyzerService;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.TreeMultiset;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.list.TreeList;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -21,7 +22,7 @@ import static java.math.BigDecimal.ZERO;
 @Slf4j
 @Component
 public class SlidingWindowManager {
-    private final TreeList<BigDecimal> sortedFee = new TreeList<>();
+    private final TreeMultiset<BigDecimal> sortedFees = TreeMultiset.create();
     private final BlockingQueue<Transaction> transactionQueue = new LinkedBlockingQueue<>();
     private final int slidingWindowSize;
     private final TransactionAnalyzerService analyzerService;
@@ -48,12 +49,12 @@ public class SlidingWindowManager {
                 try {
                     var tx = transactionQueue.take();
 
-                    resizeSortedTransactionsPerFeeRate();
+                    resizeSortedTransactionsPerFeeRate(tx);
 
-                    sortedFee.add(tx.feePerVSize());
+                    sortedFees.add(tx.feePerVSize());
                     transactionWindowSnapshotService.addFee(tx.feePerVSize());
 
-                    var snapshot = transactionWindowSnapshotService.takeCurrentWindowSnapshot(sortedFee);
+                    var snapshot = transactionWindowSnapshotService.takeCurrentWindowSnapshot(ImmutableList.copyOf(sortedFees));
                     analyzerService.processTransaction(tx, snapshot);
                 } catch (InterruptedException e) {
                     log.warn("Thread interrupted while waiting for transaction", e);
@@ -90,11 +91,14 @@ public class SlidingWindowManager {
                 });
     }
 
-    private void resizeSortedTransactionsPerFeeRate() {
-        if (sortedFee.size() >= slidingWindowSize) {
-            var oldestFee = sortedFee.removeFirst();
-            transactionWindowSnapshotService.subtractFee(oldestFee);
-            log.debug("Sliding window is full, removing oldest fee: {}", oldestFee);
+    private void resizeSortedTransactionsPerFeeRate(Transaction tx) {
+        if (sortedFees.size() >= slidingWindowSize) {
+            var removed = sortedFees.remove(tx.feePerVSize());
+            if (!removed) {
+                log.warn("TX fee rate not found in sliding window: {}", tx.feePerVSize());
+            }
+            transactionWindowSnapshotService.subtractFee(tx.feePerVSize());
+            log.debug("Sliding window is full, removing oldest tx fee: {}", tx.feePerVSize());
         }
     }
 

@@ -1,12 +1,12 @@
 package com.blockchain.blockpulseservice.service;
 
 import com.blockchain.blockpulseservice.client.rest.MempoolStatsUpdater;
+import com.blockchain.blockpulseservice.model.domain.AnalysisContext;
 import com.blockchain.blockpulseservice.model.domain.Transaction;
 import com.blockchain.blockpulseservice.model.domain.TransactionWindowSnapshot;
-import com.blockchain.blockpulseservice.model.dto.AnalyzedTransactionDTO;
-import com.blockchain.blockpulseservice.model.domain.AnalysisContext;
+import com.blockchain.blockpulseservice.event.AnalyzedTransactionEvent;
+import com.blockchain.blockpulseservice.model.dto.TransactionWindowSnapshotDTO;
 import com.blockchain.blockpulseservice.service.analysis.TransactionAnalyzer;
-import com.blockchain.blockpulseservice.model.TransactionWindowSnapshotDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -41,8 +41,8 @@ public class TransactionAnalyzerService {
         }
     }
 
-    private AnalyzedTransactionDTO mapToAnalyzedTransaction(AnalysisContext context) {
-        return AnalyzedTransactionDTO.builder()
+    private AnalyzedTransactionEvent mapToAnalyzedTransaction(AnalysisContext context) {
+        return AnalyzedTransactionEvent.builder()
                 .id(context.getNewTransaction().hash())
                 .seq(txSequence.incrementAndGet())
                 .producedAt(Instant.now())
@@ -60,8 +60,9 @@ public class TransactionAnalyzerService {
     private TransactionWindowSnapshotDTO mapToTransactionWindowSnapshotDTO(TransactionWindowSnapshot windowSnapshot) {
         return new TransactionWindowSnapshotDTO(
                 windowSnapshot.transactionsCount(),
+                windowSnapshot.outliersCount(),
                 windowSnapshot.avgFeePerVByte(),
-                windowSnapshot.medianFeePerVByte(),
-                windowSnapshot.outliersCount());
+                windowSnapshot.median()
+        );
     }
 }

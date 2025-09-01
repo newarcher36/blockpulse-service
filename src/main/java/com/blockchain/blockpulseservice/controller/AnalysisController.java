@@ -1,6 +1,6 @@
 package com.blockchain.blockpulseservice.controller;
 
-import com.blockchain.blockpulseservice.model.dto.AnalyzedTransactionDTO;
+import com.blockchain.blockpulseservice.event.AnalyzedTransactionEvent;
 import com.blockchain.blockpulseservice.service.AnalysisStream;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
@@ -21,7 +21,7 @@ public class AnalysisController {
     }
 
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ServerSentEvent<AnalyzedTransactionDTO>> stream() {
+    public Flux<ServerSentEvent<AnalyzedTransactionEvent>> stream() {
         return stream.flux()
                 .map(dto -> ServerSentEvent.builder(dto).build())
                 .sample(Duration.ofSeconds(2));

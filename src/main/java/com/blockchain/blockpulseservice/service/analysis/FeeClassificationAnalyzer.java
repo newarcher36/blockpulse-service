@@ -2,6 +2,7 @@ package com.blockchain.blockpulseservice.service.analysis;
 
 import com.blockchain.blockpulseservice.model.domain.AnalysisContext;
 import com.blockchain.blockpulseservice.model.domain.FeeClassification;
+import com.google.common.collect.Range;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -38,12 +39,10 @@ public class FeeClassificationAnalyzer extends BaseTransactionAnalyzer {
             }
         } else {
             // Normal network → use local percentiles
-            var firstQuartile = context.getTransactionWindowSnapshot().firstQuartile();
-            var thirdQuartile = context.getTransactionWindowSnapshot().thirdQuartile();
-
-            if (feePerVSize.compareTo(firstQuartile) < 0) {
+            var iqrRange = context.getTransactionWindowSnapshot().iqrRange();
+            if (feePerVSize.compareTo(iqrRange.lowerEndpoint()) < 0) {
                 return FeeClassification.CHEAP;
-            } else if (feePerVSize.compareTo(thirdQuartile) <= 0) {
+            } else if (iqrRange.contains(feePerVSize)) {
                 return FeeClassification.NORMAL;
             } else {
                 return FeeClassification.EXPENSIVE;

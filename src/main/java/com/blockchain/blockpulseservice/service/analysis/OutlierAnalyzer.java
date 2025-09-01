@@ -7,13 +7,11 @@ import org.springframework.stereotype.Component;
 public class OutlierAnalyzer extends BaseTransactionAnalyzer {
     @Override
     protected AnalysisContext doAnalyze(AnalysisContext context) {
-        var percentile = context.getTransactionWindowSnapshot().outlierFeePerVBytePercentile();
-        if (context.getNewTransaction().feePerVSize().compareTo(percentile) > 0) {
-            return context
-                    .toBuilder()
-                    .isOutlier(true)
-                    .build();
-        }
-        return context;
+        var feePerVSize = context.getNewTransaction().feePerVSize();
+        boolean isOutOfRange = !context.getTransactionWindowSnapshot().tukeyFences().contains(feePerVSize);
+        return context
+                .toBuilder()
+                .isOutlier(isOutOfRange)
+                .build();
     }
 }
