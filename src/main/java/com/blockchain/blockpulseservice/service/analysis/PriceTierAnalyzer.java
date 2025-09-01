@@ -19,7 +19,7 @@ public class PriceTierAnalyzer extends BaseFeeAnalyzer {
 
     @Override
     protected AnalysisContext doAnalyze(AnalysisContext context) {
-        PriceTier classification = classifyPriceTier(context);
+        var classification = classifyPriceTier(context);
         return context.toBuilder()
                 .priceTier(classification)
                 .build();
