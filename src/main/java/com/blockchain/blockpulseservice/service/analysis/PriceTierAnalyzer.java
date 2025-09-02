@@ -35,7 +35,7 @@ public class PriceTierAnalyzer extends BaseFeeAnalyzer {
             return classifyUsingMempool(fee, mempool);
         }
 
-        var iqr = context.getTransactionWindowSnapshot().iqrRange();
+        var iqr = context.getFeeWindowStatsSummary().iqrRange();
         return classifyUsingIqr(fee, iqr);
     }
 

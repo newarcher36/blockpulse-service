@@ -24,14 +24,15 @@ public class SlidingWindowManager {
     private final Deque<BigDecimal> feeInsertionOrder = new ArrayDeque<>();
     private final int slidingWindowSize;
     private final TransactionAnalyzerService analyzerService;
-    private final TransactionWindowSnapshotService transactionWindowSnapshotService;
+    private final FeeWindowStatsSummaryCalculator feeWindowStatsSummaryCalculator;
+
 
     public SlidingWindowManager(@Value("${app.analysis.tx.sliding-window-size:1000}") int slidingWindowSize,
                                 TransactionAnalyzerService analyzerService,
-                                TransactionWindowSnapshotService transactionWindowSnapshotService) {
+                                FeeWindowStatsSummaryCalculator feeWindowStatsSummaryCalculator) {
         this.slidingWindowSize = slidingWindowSize;
         this.analyzerService = analyzerService;
-        this.transactionWindowSnapshotService = transactionWindowSnapshotService;
+        this.feeWindowStatsSummaryCalculator = feeWindowStatsSummaryCalculator;
     }
 
     @Async
@@ -43,26 +44,23 @@ public class SlidingWindowManager {
             return;
         }
 
-        resizeSortedTransactionsPerFeeRate();
+        resizeSlidingWindowIfFull();
 
         sortedFees.add(tx.feePerVSize());
-        transactionWindowSnapshotService.addFee(tx.feePerVSize());
         feeInsertionOrder.addLast(tx.feePerVSize());
 
-        var snapshot = transactionWindowSnapshotService.takeCurrentWindowSnapshot(ImmutableList.copyOf(sortedFees));
-        analyzerService.processTransaction(tx, snapshot);
+        var agg = aggregateFees(sortedFees, sortedFees.size());
+        var feeWindowStatsSummary = feeWindowStatsSummaryCalculator.calculateComprehensiveStats(agg.fees(), agg.sum());
+        analyzerService.processTransaction(tx, feeWindowStatsSummary);
     }
 
-    private void resizeSortedTransactionsPerFeeRate() {
+    private void resizeSlidingWindowIfFull() {
         if (sortedFees.size() >= slidingWindowSize) {
             var oldestFee = feeInsertionOrder.pollFirst();
-            if (oldestFee != null) {
-                boolean removed = sortedFees.remove(oldestFee);
-                if (!removed) {
-                    log.warn("Oldest fee not found in sliding window: {}", oldestFee);
-                }
-                transactionWindowSnapshotService.subtractFee(oldestFee);
-                log.debug("Sliding window is full, removing oldest tx feePerVSize: {}", oldestFee);
+            log.debug("Sliding window is full, removing oldest tx feePerVSize: {}", oldestFee);
+            boolean removed = sortedFees.remove(oldestFee);
+            if (!removed) {
+                log.warn("Oldest fee not found in sliding window: {}", oldestFee);
             }
         }
     }
@@ -77,5 +75,17 @@ public class SlidingWindowManager {
             return false;
         }
         return true;
+    }
+
+    private record FeesAggregate(ImmutableList<BigDecimal> fees, BigDecimal sum) {}
+
+    private FeesAggregate aggregateFees(Iterable<BigDecimal> fees, int size) {
+        var builder = ImmutableList.<BigDecimal>builderWithExpectedSize(size);
+        var sum = ZERO;
+        for (var f : fees) {
+            builder.add(f);
+            sum = sum.add(f);
+        }
+        return new FeesAggregate(builder.build(), sum);
     }
 }

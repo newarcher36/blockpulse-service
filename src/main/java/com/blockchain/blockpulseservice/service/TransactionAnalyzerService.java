@@ -3,7 +3,7 @@ package com.blockchain.blockpulseservice.service;
 import com.blockchain.blockpulseservice.client.rest.MempoolStatsUpdater;
 import com.blockchain.blockpulseservice.model.domain.AnalysisContext;
 import com.blockchain.blockpulseservice.model.domain.Transaction;
-import com.blockchain.blockpulseservice.model.domain.TransactionWindowSnapshot;
+import com.blockchain.blockpulseservice.model.domain.FeeWindowStatsSummary;
 import com.blockchain.blockpulseservice.service.analysis.FeeAnalyzer;
 import com.blockchain.blockpulseservice.service.mapper.AnalyzedTransactionMapper;
 import lombok.RequiredArgsConstructor;
@@ -19,11 +19,11 @@ public class TransactionAnalyzerService {
     private final MempoolStatsUpdater mempoolStatsUpdater;
     private final AnalyzedTransactionMapper analyzedTransactionMapper;
 
-    public void processTransaction(Transaction transaction, TransactionWindowSnapshot transactionWindowSnapshot) {
+    public void processTransaction(Transaction transaction, FeeWindowStatsSummary feeWindowStatsSummary) {
         log.debug("Processing transaction: {}", transaction.hash());
         var context = AnalysisContext.builder()
                 .newTransaction(transaction)
-                .transactionWindowSnapshot(transactionWindowSnapshot)
+                .feeWindowStatsSummary(feeWindowStatsSummary)
                 .mempoolStats(mempoolStatsUpdater.getMempoolStats())
                 .build();
 

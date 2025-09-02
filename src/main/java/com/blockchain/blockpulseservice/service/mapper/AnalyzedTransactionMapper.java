@@ -2,7 +2,7 @@ package com.blockchain.blockpulseservice.service.mapper;
 
 import com.blockchain.blockpulseservice.event.AnalyzedTransactionEvent;
 import com.blockchain.blockpulseservice.model.domain.AnalysisContext;
-import com.blockchain.blockpulseservice.model.domain.TransactionWindowSnapshot;
+import com.blockchain.blockpulseservice.model.domain.FeeWindowStatsSummary;
 import com.blockchain.blockpulseservice.model.dto.TransactionWindowSnapshotDTO;
 import org.springframework.stereotype.Component;
 
@@ -28,11 +28,11 @@ public class AnalyzedTransactionMapper {
                 .patternTypes(context.getPatterns())
                 .priceTier(context.getPriceTier())
                 .isOutlier(context.isOutlier())
-                .windowSnapshot(mapToTransactionWindowSnapshotDTO(context.getTransactionWindowSnapshot()))
+                .windowSnapshot(mapToTransactionWindowSnapshotDTO(context.getFeeWindowStatsSummary()))
                 .build();
     }
 
-    private TransactionWindowSnapshotDTO mapToTransactionWindowSnapshotDTO(TransactionWindowSnapshot windowSnapshot) {
+    private TransactionWindowSnapshotDTO mapToTransactionWindowSnapshotDTO(FeeWindowStatsSummary windowSnapshot) {
         return new TransactionWindowSnapshotDTO(
                 windowSnapshot.transactionCount(),
                 windowSnapshot.outliersCount(),

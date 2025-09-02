@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 class FeeWindowStatsSummaryTest {
     static List<BigDecimal> sortedFees;
     static BigDecimal sum;
-    final FeeWindowStatsSummary summary = new FeeWindowStatsSummary();
 
     @BeforeAll
     static void loadCsv() throws Exception {
@@ -32,30 +31,6 @@ class FeeWindowStatsSummaryTest {
             sortedFees = fees.stream().sorted(Comparator.naturalOrder()).collect(Collectors.toList());
             sum = sortedFees.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
         }
-    }
-
-    @Test
-    void calculateIqr_andTukeyFences() {
-        BigDecimal iqr = summary.calculateIQRTest(sortedFees);
-        System.out.println("IQR = " + iqr);
-    }
-
-    @Test
-    void calculateMedian_fromSortedList() {
-        BigDecimal median = summary.calculateMedian(sortedFees);
-        System.out.println("MEDIAN = " + median);
-    }
-
-    @Test
-    void calculateAvg_fromSumAndCount() {
-        var avg = summary.calculateAvg(sum, sortedFees.size());
-        System.out.println("AVG = " + avg);
-    }
-
-    @Test
-    void countOutliers_belowAndAbove() {
-        int actual = summary.countOutliers(sortedFees);
-        System.out.println("OUTLIERS = " + actual);
     }
 }
 

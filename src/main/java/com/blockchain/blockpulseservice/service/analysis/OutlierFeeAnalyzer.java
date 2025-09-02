@@ -8,7 +8,7 @@ public class OutlierFeeAnalyzer extends BaseFeeAnalyzer {
     @Override
     protected AnalysisContext doAnalyze(AnalysisContext context) {
         var feePerVSize = context.getNewTransaction().feePerVSize();
-        boolean isOutOfRange = !context.getTransactionWindowSnapshot().tukeyFences().contains(feePerVSize);
+        boolean isOutOfRange = !context.getFeeWindowStatsSummary().tukeyFences().contains(feePerVSize);
         return context
                 .toBuilder()
                 .isOutlier(isOutOfRange)

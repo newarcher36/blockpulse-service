@@ -49,3 +49,4 @@ app:
     tx:
       sliding-window-size: 1000
       mempool-congestion-vbytes-threshold: 100
+      tukey-k: 1.5

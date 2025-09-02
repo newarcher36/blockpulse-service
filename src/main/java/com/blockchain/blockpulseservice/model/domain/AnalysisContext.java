@@ -12,7 +12,7 @@ import java.util.Set;
 public class AnalysisContext {
     // input
     Transaction newTransaction;
-    TransactionWindowSnapshot transactionWindowSnapshot;
+    FeeWindowStatsSummary feeWindowStatsSummary;
     MempoolStats mempoolStats;
     // output
     @Builder.Default
