@@ -26,7 +26,7 @@ public class PriceTierAnalyzer extends BaseFeeAnalyzer {
     }
 
     private PriceTier classifyPriceTier(AnalysisContext context) {
-        if (context.isOutlier()) return PriceTier.OUTSIDE_MARKET;
+        if (context.isOutlier()) return PriceTier.ABNORMAL_PRICE;
 
         var fee = context.getNewTransaction().feePerVSize();
         var mempool = context.getMempoolStats();
