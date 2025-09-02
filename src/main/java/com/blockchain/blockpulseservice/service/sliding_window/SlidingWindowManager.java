@@ -8,6 +8,7 @@ import com.google.common.collect.TreeMultiset;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -33,6 +34,7 @@ public class SlidingWindowManager {
         this.transactionWindowSnapshotService = transactionWindowSnapshotService;
     }
 
+    @Async
     @EventListener
     public void onNewTransaction(NewTransactionEvent event) {
         var tx = event.transaction();

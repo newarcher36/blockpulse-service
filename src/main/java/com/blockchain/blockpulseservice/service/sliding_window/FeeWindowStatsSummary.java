@@ -54,8 +54,8 @@ public class FeeWindowStatsSummary {
     }
 
     public BigDecimal calculateIQRTest(List<BigDecimal> sortedFees) {
-        BigDecimal q1 = calculatePercentile(FIRST_QUARTILE_THRESHOLD, sortedFees);
-        BigDecimal q3 = calculatePercentile(THIRD_QUARTILE_THRESHOLD, sortedFees);
+        var q1 = calculatePercentile(FIRST_QUARTILE_THRESHOLD, sortedFees);
+        var q3 = calculatePercentile(THIRD_QUARTILE_THRESHOLD, sortedFees);
         return q3.subtract(q1);
     }
 

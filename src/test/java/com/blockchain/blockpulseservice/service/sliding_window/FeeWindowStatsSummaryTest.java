@@ -1,7 +1,5 @@
 package com.blockchain.blockpulseservice.service.sliding_window;
 
-import com.google.common.collect.Range;
-import org.apache.commons.statistics.descriptive.Mean;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -13,8 +11,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class FeeWindowStatsSummaryTest {
     static List<BigDecimal> sortedFees;

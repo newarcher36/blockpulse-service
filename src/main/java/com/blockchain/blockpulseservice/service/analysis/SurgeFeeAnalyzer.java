@@ -1,5 +1,6 @@
 package com.blockchain.blockpulseservice.service.analysis;
 
+import com.blockchain.blockpulseservice.model.MempoolStats;
 import com.blockchain.blockpulseservice.model.domain.AnalysisContext;
 import com.blockchain.blockpulseservice.model.domain.PatternType;
 import lombok.extern.slf4j.Slf4j;
@@ -20,10 +21,11 @@ public class SurgeFeeAnalyzer extends BaseFeeAnalyzer {
     @Override
     protected AnalysisContext doAnalyze(AnalysisContext context) {
         var mempoolStats = context.getMempoolStats();
-        var transaction = context.getNewTransaction();
-        boolean isSurge = context.isOutlier() &&
-                isFarBeyondRecommendedFastFee(transaction.feePerVSize(), mempoolStats.fastFeePerVByte()) &&
-                mempoolStats.mempoolSize() >= mempoolThreshold;
+        var feePerVSize = context.getNewTransaction().feePerVSize();
+        var upperEndpoint = context.getTransactionWindowSnapshot().tukeyFences().upperEndpoint();
+        boolean isSurge = feePerVSize.compareTo(upperEndpoint) > 0  &&
+                isFarBeyondRecommendedFastFee(feePerVSize, mempoolStats.fastFeePerVByte()) &&
+                mempoolIsFull(mempoolStats);
         if (isSurge) {
             log.debug("Surge detected for tx: {}", context.getNewTransaction().hash());
             return context
@@ -35,5 +37,9 @@ public class SurgeFeeAnalyzer extends BaseFeeAnalyzer {
 
     private boolean isFarBeyondRecommendedFastFee(BigDecimal feePerVSize, double fastFeePerVByte) {
         return feePerVSize.compareTo(BigDecimal.valueOf(fastFeePerVByte)) > 0;
+    }
+
+    private boolean mempoolIsFull(MempoolStats mempoolStats) {
+        return mempoolStats.mempoolSize() >= mempoolThreshold;
     }
 }

@@ -11,7 +11,6 @@ import java.util.Set;
 
 @Builder
 public record AnalyzedTransactionEvent(String id,
-                                       int seq,
                                        Instant producedAt,
                                        BigDecimal feePerVByte,
                                        BigDecimal totalFee,
