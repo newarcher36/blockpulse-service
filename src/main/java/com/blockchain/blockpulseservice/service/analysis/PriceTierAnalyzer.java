@@ -1,7 +1,7 @@
 package com.blockchain.blockpulseservice.service.analysis;
 
-import com.blockchain.blockpulseservice.model.MempoolStats;
 import com.blockchain.blockpulseservice.model.domain.AnalysisContext;
+import com.blockchain.blockpulseservice.model.domain.MempoolStats;
 import com.blockchain.blockpulseservice.model.domain.PriceTier;
 import com.google.common.collect.Range;
 import org.springframework.beans.factory.annotation.Value;

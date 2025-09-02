@@ -12,8 +12,11 @@ public class SpamFeeAnalyzer extends BaseFeeAnalyzer {
         var lowerFence = context.getFeeWindowStatsSummary().tukeyFences().lowerEndpoint();
 
         if (fee.compareTo(lowerFence) < 0) {
-            return context.addInsight(PatternType.SCAM).build();
+            return context.toBuilder()
+                    .pattern(PatternType.SCAM)
+                    .build();
         }
+
         return context;
     }
 }

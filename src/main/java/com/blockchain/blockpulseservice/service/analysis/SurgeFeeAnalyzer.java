@@ -1,7 +1,7 @@
 package com.blockchain.blockpulseservice.service.analysis;
 
-import com.blockchain.blockpulseservice.model.MempoolStats;
 import com.blockchain.blockpulseservice.model.domain.AnalysisContext;
+import com.blockchain.blockpulseservice.model.domain.MempoolStats;
 import com.blockchain.blockpulseservice.model.domain.PatternType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,8 +28,8 @@ public class SurgeFeeAnalyzer extends BaseFeeAnalyzer {
                 mempoolIsFull(mempoolStats);
         if (isSurge) {
             log.debug("Surge detected for tx: {}", context.getNewTransaction().hash());
-            return context
-                    .addInsight(PatternType.SURGE)
+            return context.toBuilder()
+                    .pattern(PatternType.SURGE)
                     .build();
         }
         return context;

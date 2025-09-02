@@ -23,7 +23,7 @@ public class AnalyzedTransactionMapper {
                 .producedAt(Instant.now(clock))
                 .feePerVByte(context.getNewTransaction().feePerVSize())
                 .totalFee(context.getNewTransaction().totalFee())
-                .size(context.getNewTransaction().vSize())
+                .txSize(context.getNewTransaction().vSize())
                 .timestamp(context.getNewTransaction().time())
                 .patternTypes(context.getPatterns())
                 .priceTier(context.getPriceTier())
