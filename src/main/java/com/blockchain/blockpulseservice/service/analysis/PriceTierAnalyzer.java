@@ -3,7 +3,6 @@ package com.blockchain.blockpulseservice.service.analysis;
 import com.blockchain.blockpulseservice.model.domain.AnalysisContext;
 import com.blockchain.blockpulseservice.model.domain.MempoolStats;
 import com.blockchain.blockpulseservice.model.domain.PriceTier;
-import com.google.common.collect.Range;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -31,12 +30,13 @@ public class PriceTierAnalyzer extends BaseFeeAnalyzer {
         var fee = context.getNewTransaction().feePerVSize();
         var mempool = context.getMempoolStats();
 
-        if (mempool.mempoolSize() > mempoolSizeThreshold) {
-            return classifyUsingMempool(fee, mempool);
-        }
+        return isMempoolCongested(mempool) ?
+                classifyUsingMempool(fee, mempool) :
+                classifyUsingIqr(fee, context);
+    }
 
-        var iqr = context.getFeeWindowStatsSummary().iqrRange();
-        return classifyUsingIqr(fee, iqr);
+    private boolean isMempoolCongested(MempoolStats mempool) {
+        return mempool.mempoolSize() > mempoolSizeThreshold;
     }
 
     private PriceTier classifyUsingMempool(BigDecimal fee, MempoolStats stats) {
@@ -48,7 +48,8 @@ public class PriceTierAnalyzer extends BaseFeeAnalyzer {
         return PriceTier.EXPENSIVE;
     }
 
-    private PriceTier classifyUsingIqr(BigDecimal fee, Range<BigDecimal> iqr) {
+    private PriceTier classifyUsingIqr(BigDecimal fee, AnalysisContext context) {
+        var iqr = context.getFeeWindowStatsSummary().iqrRange();
         if (fee.compareTo(iqr.lowerEndpoint()) < 0) return PriceTier.CHEAP;
         if (iqr.contains(fee)) return PriceTier.NORMAL;
         return PriceTier.EXPENSIVE;

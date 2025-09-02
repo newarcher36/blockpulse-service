@@ -81,6 +81,6 @@ public class MempoolStatsUpdater {
     }
 
     public MempoolStats getMempoolStats() {
-        return mempoolStats == null ? new MempoolStats(0, 0, 0, 0) : mempoolStats;
+        return mempoolStats == null ? MempoolStats.empty() : mempoolStats;
     }
 }

@@ -6,4 +6,8 @@ import lombok.Builder;
 public record MempoolStats(double fastFeePerVByte,
                            double mediumFeePerVByte,
                            double slowFeePerVByte,
-                           int mempoolSize) {}
+                           int mempoolSize) {
+    public static MempoolStats empty() {
+        return new MempoolStats(0, 0, 0, 0);
+    }
+}

@@ -52,7 +52,7 @@ class SpamFeeAnalyzerTest {
         return AnalysisContext.builder()
                 .newTransaction(new Transaction("tx", fee, BigDecimal.ZERO, 100, Instant.EPOCH))
                 .feeWindowStatsSummary(statsSummary)
-                .mempoolStats(new MempoolStats(0,0,0,0))
+                .mempoolStats(MempoolStats.empty())
                 .build();
     }
 }
