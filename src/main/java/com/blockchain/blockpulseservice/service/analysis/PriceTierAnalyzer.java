@@ -11,9 +11,12 @@ import java.math.BigDecimal;
 @Component
 public class PriceTierAnalyzer extends BaseFeeAnalyzer {
     private final int mempoolSizeThreshold;
+    private final PriceTierClassifier classifier;
 
-    public PriceTierAnalyzer(@Value("${app.analysis.tx.mempool-congestion-vbytes-threshold}") int mempoolSizeThreshold) {
+    public PriceTierAnalyzer(@Value("${app.analysis.tx.mempool-congestion-vbytes-threshold}") int mempoolSizeThreshold,
+                             PriceTierClassifier classifier) {
         this.mempoolSizeThreshold = mempoolSizeThreshold;
+        this.classifier = classifier;
     }
 
     @Override
@@ -31,27 +34,13 @@ public class PriceTierAnalyzer extends BaseFeeAnalyzer {
         var mempool = context.getMempoolStats();
 
         return isMempoolCongested(mempool) ?
-                classifyUsingMempool(fee, mempool) :
-                classifyUsingIqr(fee, context);
+                classifier.classifyUsingMempool(fee, mempool) :
+                classifier.classifyUsingIqr(fee, context.getFeeWindowStatsSummary().iqrRange());
     }
 
     private boolean isMempoolCongested(MempoolStats mempool) {
         return mempool.mempoolSize() > mempoolSizeThreshold;
     }
 
-    private PriceTier classifyUsingMempool(BigDecimal fee, MempoolStats stats) {
-        var fast = BigDecimal.valueOf(stats.fastFeePerVByte());
-        var medium = BigDecimal.valueOf(stats.mediumFeePerVByte());
-
-        if (fee.compareTo(fast) > 0) return PriceTier.CHEAP;
-        if (fee.compareTo(medium) <= 0) return PriceTier.NORMAL;
-        return PriceTier.EXPENSIVE;
+    // helpers retained only for readability of the mempool check
     }
-
-    private PriceTier classifyUsingIqr(BigDecimal fee, AnalysisContext context) {
-        var iqr = context.getFeeWindowStatsSummary().iqrRange();
-        if (fee.compareTo(iqr.lowerEndpoint()) < 0) return PriceTier.CHEAP;
-        if (iqr.contains(fee)) return PriceTier.NORMAL;
-        return PriceTier.EXPENSIVE;
-    }
-}

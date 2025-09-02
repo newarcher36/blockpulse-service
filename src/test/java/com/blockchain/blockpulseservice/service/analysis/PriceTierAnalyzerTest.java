@@ -14,7 +14,8 @@ import java.time.Instant;
 import static org.junit.jupiter.api.Assertions.*;
 
 class PriceTierAnalyzerTest {
-    private final PriceTierAnalyzer priceTierAnalyzer = new PriceTierAnalyzer(1000);
+    private final PriceTierClassifier priceTierClassifier = new PriceTierClassifier();
+    private final PriceTierAnalyzer priceTierAnalyzer = new PriceTierAnalyzer(1000, priceTierClassifier);
 
     @Test
     void returnsAbnormalWhenOutlier() {
@@ -23,7 +24,7 @@ class PriceTierAnalyzerTest {
                 .isOutlier(true)
                 .build();
 
-        var result = new PriceTierAnalyzer(1000).analyze(ctx);
+        var result = new PriceTierAnalyzer(1000, priceTierClassifier).analyze(ctx);
 
         assertEquals(PriceTier.ABNORMAL_PRICE, result.getPriceTier());
     }
@@ -33,7 +34,7 @@ class PriceTierAnalyzerTest {
         var base = baseContext(new BigDecimal("0"), 2000, defaultIqr(), defaultFences());
 
         // fee > fast -> CHEAP
-        var res1 = new PriceTierAnalyzer(1000).analyze(
+        var res1 = new PriceTierAnalyzer(1000, priceTierClassifier).analyze(
                 base.toBuilder()
                         .newTransaction(new Transaction("t1", new BigDecimal("60"), BigDecimal.ZERO, 100, Instant.EPOCH))
                         .mempoolStats(new MempoolStats(50, 25, 10, 2000))
@@ -41,14 +42,14 @@ class PriceTierAnalyzerTest {
         assertEquals(PriceTier.CHEAP, res1.getPriceTier());
 
         // fee <= medium -> NORMAL
-        var res2 = new PriceTierAnalyzer(1000).analyze(base.toBuilder()
+        var res2 = new PriceTierAnalyzer(1000, priceTierClassifier).analyze(base.toBuilder()
                 .newTransaction(new Transaction("t2", new BigDecimal("25"), BigDecimal.ZERO, 100, Instant.EPOCH))
                 .mempoolStats(new MempoolStats(50, 25, 10, 2000))
                 .build());
         assertEquals(PriceTier.NORMAL, res2.getPriceTier());
 
         // else -> EXPENSIVE (fee between medium and fast)
-        var res3 = new PriceTierAnalyzer(1000).analyze(base.toBuilder()
+        var res3 = new PriceTierAnalyzer(1000, priceTierClassifier).analyze(base.toBuilder()
                 .newTransaction(new Transaction("t3", new BigDecimal("40"), BigDecimal.ZERO, 100, Instant.EPOCH))
                 .mempoolStats(new MempoolStats(50, 25, 10, 2000))
                 .build());
@@ -67,13 +68,13 @@ class PriceTierAnalyzerTest {
         assertEquals(PriceTier.CHEAP, r1.getPriceTier());
 
         // inside -> NORMAL
-        var r2 = new PriceTierAnalyzer(1000).analyze(base.toBuilder()
+        var r2 = new PriceTierAnalyzer(1000, priceTierClassifier).analyze(base.toBuilder()
                 .newTransaction(new Transaction("t2", new BigDecimal("15"), BigDecimal.ZERO, 100, Instant.EPOCH))
                 .build());
         assertEquals(PriceTier.NORMAL, r2.getPriceTier());
 
         // above -> EXPENSIVE
-        var r3 = new PriceTierAnalyzer(1000).analyze(base.toBuilder()
+        var r3 = new PriceTierAnalyzer(1000, priceTierClassifier).analyze(base.toBuilder()
                 .newTransaction(new Transaction("t3", new BigDecimal("25"), BigDecimal.ZERO, 100, Instant.EPOCH))
                 .build());
         assertEquals(PriceTier.EXPENSIVE, r3.getPriceTier());
@@ -104,4 +105,3 @@ class PriceTierAnalyzerTest {
         return Range.closed(new BigDecimal("5"), new BigDecimal("30"));
     }
 }
-
