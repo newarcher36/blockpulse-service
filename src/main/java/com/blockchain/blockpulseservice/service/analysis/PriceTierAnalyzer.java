@@ -6,14 +6,13 @@ import com.blockchain.blockpulseservice.model.domain.PriceTier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
-
 @Component
 public class PriceTierAnalyzer extends BaseFeeAnalyzer {
     private final int mempoolSizeThreshold;
     private final PriceTierClassifier classifier;
 
-    public PriceTierAnalyzer(@Value("${app.analysis.tx.mempool-congestion-vbytes-threshold}") int mempoolSizeThreshold,
+    public PriceTierAnalyzer(@Value("${app.analysis.tx.mempool-congestion-vbytes-threshold}")
+                             int mempoolSizeThreshold,
                              PriceTierClassifier classifier) {
         this.mempoolSizeThreshold = mempoolSizeThreshold;
         this.classifier = classifier;
@@ -41,6 +40,4 @@ public class PriceTierAnalyzer extends BaseFeeAnalyzer {
     private boolean isMempoolCongested(MempoolStats mempool) {
         return mempool.mempoolSize() > mempoolSizeThreshold;
     }
-
-    // helpers retained only for readability of the mempool check
-    }
+}
