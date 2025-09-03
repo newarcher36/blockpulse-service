@@ -11,13 +11,12 @@ import java.util.List;
 public class OutlierCounter {
     public int countOutliers(List<BigDecimal> sortedFees, Range<BigDecimal> fences) {
         int lowerIndex = findPosition(sortedFees, fences.lowerEndpoint());
-        int upperIndex = findPosition(sortedFees, fences.upperEndpoint());
-        return sortedFees.size() - upperIndex + lowerIndex;
+        int upperIndex = findPosition(sortedFees, fences.upperEndpoint()) + 1;
+        return sortedFees.size() - (upperIndex - lowerIndex);
     }
 
     private int findPosition(List<BigDecimal> sortedFees, BigDecimal endpoint) {
         int position = Collections.binarySearch(sortedFees, endpoint);
-        return position < 0 ? Math.abs(position) - 1 : position;
+        return position < 0 ? Math.abs(position) : position;
     }
 }
-
