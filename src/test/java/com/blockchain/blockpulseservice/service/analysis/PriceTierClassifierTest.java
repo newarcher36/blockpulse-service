@@ -14,7 +14,12 @@ class PriceTierClassifierTest {
 
     @Test
     void classifyUsingMempool_cases() {
-        var stats = new MempoolStats(50, 25, 10, 0);
+        var stats = MempoolStats.builder()
+                .fastFeePerVByte(50)
+                .mediumFeePerVByte(25)
+                .slowFeePerVByte(10)
+                .mempoolSize(0)
+                .build();
 
         assertEquals(PriceTier.CHEAP, classifier.classifyUsingMempool(new BigDecimal("60"), stats));
 

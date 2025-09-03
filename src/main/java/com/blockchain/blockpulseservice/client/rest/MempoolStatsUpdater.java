@@ -77,7 +77,12 @@ public class MempoolStatsUpdater {
     }
 
     private MempoolStats mapToMempoolInfo(RecommendedTransactionFeeDTO feeDto, MempoolInfoDTO mempoolInfoDTO) {
-        return new MempoolStats(feeDto.fastestFee(), feeDto.halfHourFee(), feeDto.hourFee(), mempoolInfoDTO.memPoolSize());
+        return MempoolStats.builder()
+                .fastFeePerVByte(feeDto.fastestFee())
+                .mediumFeePerVByte(feeDto.halfHourFee())
+                .slowFeePerVByte(feeDto.hourFee())
+                .mempoolSize(mempoolInfoDTO.memPoolSize())
+                .build();
     }
 
     public MempoolStats getMempoolStats() {

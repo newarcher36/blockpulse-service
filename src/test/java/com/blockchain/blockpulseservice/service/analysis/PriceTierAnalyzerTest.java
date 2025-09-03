@@ -10,122 +10,102 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class PriceTierAnalyzerTest {
+    private static final int MEMPOOL_SIZE_THRESHOLD = 1000;
+    private static final Range<BigDecimal> DEFAULT_IQR_RANGE = Range.closed(new BigDecimal("10"), new BigDecimal("20"));
     @Mock
     private PriceTierClassifier priceTierClassifier;
-
     private PriceTierAnalyzer priceTierAnalyzer;
 
     @BeforeEach
     void setUp() {
-        priceTierAnalyzer = new PriceTierAnalyzer(1000, priceTierClassifier);
+        priceTierAnalyzer = new PriceTierAnalyzer(MEMPOOL_SIZE_THRESHOLD, priceTierClassifier);
     }
 
     @Test
-    void returnsAbnormalWhenOutlier() {
-        var ctx = baseContext(new BigDecimal("15"), 100,
-                Range.closed(new BigDecimal("10"), new BigDecimal("20")),
-                Range.closed(new BigDecimal("5"), new BigDecimal("30")))
+    void returnsAbnormalPriceWhenOutlier() {
+        var fee = new BigDecimal("15");
+        var baseCtx = baseContext(fee, MEMPOOL_SIZE_THRESHOLD)
                 .toBuilder()
                 .isOutlier(true)
                 .build();
 
-        var result = priceTierAnalyzer.analyze(ctx);
+        var actualCtx = priceTierAnalyzer.analyze(baseCtx);
 
-        assertEquals(PriceTier.ABNORMAL_PRICE, result.getPriceTier());
+        assertEquals(PriceTier.ABNORMAL_PRICE, actualCtx.getPriceTier());
+        assertThat(actualCtx)
+                .usingRecursiveComparison()
+                .ignoringFields("priceTier")
+                .isEqualTo(baseCtx);
         verifyNoInteractions(priceTierClassifier);
     }
 
     @Test
-    void congestedUsesMempoolThresholds() {
-        var base = baseContext(new BigDecimal("0"), 2000, defaultIqr(), defaultFences());
+    void analyzePriceWithMempoolThresholdsWhenCongested() {
+        var fee = new BigDecimal("0");
+        var mempoolSizeCongested = MEMPOOL_SIZE_THRESHOLD + 1;
+        var baseCtx = baseContext(fee, mempoolSizeCongested);
+        when(priceTierClassifier.classifyUsingMempool(any(), any())).thenReturn(PriceTier.CHEAP);
 
-        // Stub sequential calls when mempool is congested
-        when(priceTierClassifier.classifyUsingMempool(any(), any()))
-                .thenReturn(PriceTier.CHEAP, PriceTier.NORMAL, PriceTier.EXPENSIVE);
+        var actualCtx = priceTierAnalyzer.analyze(baseCtx);
 
-        var res1 = priceTierAnalyzer.analyze(
-                base.toBuilder()
-                        .newTransaction(new Transaction("t1", new BigDecimal("60"), BigDecimal.ZERO, 100, Instant.EPOCH))
-                        .mempoolStats(new MempoolStats(50, 25, 10, 2000))
-                        .build());
-        assertEquals(PriceTier.CHEAP, res1.getPriceTier());
-
-        var res2 = priceTierAnalyzer.analyze(base.toBuilder()
-                .newTransaction(new Transaction("t2", new BigDecimal("25"), BigDecimal.ZERO, 100, Instant.EPOCH))
-                .mempoolStats(new MempoolStats(50, 25, 10, 2000))
-                .build());
-        assertEquals(PriceTier.NORMAL, res2.getPriceTier());
-
-        var res3 = priceTierAnalyzer.analyze(base.toBuilder()
-                .newTransaction(new Transaction("t3", new BigDecimal("40"), BigDecimal.ZERO, 100, Instant.EPOCH))
-                .mempoolStats(new MempoolStats(50, 25, 10, 2000))
-                .build());
-        assertEquals(PriceTier.EXPENSIVE, res3.getPriceTier());
-
-        verify(priceTierClassifier, times(3)).classifyUsingMempool(any(), any());
+        assertThat(actualCtx.getPriceTier()).isEqualTo(PriceTier.CHEAP);
+        assertThat(actualCtx)
+                .usingRecursiveComparison()
+                .ignoringFields("priceTier")
+                .isEqualTo(baseCtx);
+        verify(priceTierClassifier).classifyUsingMempool(actualCtx.getNewTransaction().feePerVSize(), actualCtx.getMempoolStats());
         verify(priceTierClassifier, never()).classifyUsingIqr(any(), any());
     }
 
     @Test
-    void notCongestedUsesIqr() {
-        var iqr = Range.closed(new BigDecimal("10"), new BigDecimal("20"));
-        var base = baseContext(new BigDecimal("0"), 500, iqr, defaultFences());
+    void analyzePriceUsingIqrTukeyWhenMempoolIsNotCongested() {
+        var fee = new BigDecimal("15");
+        var mempoolSizeNotCongested = MEMPOOL_SIZE_THRESHOLD - 1;
+        var baseCtx = baseContext(fee, mempoolSizeNotCongested);
+        when(priceTierClassifier.classifyUsingIqr(any(BigDecimal.class), any(Range.class))).thenReturn(PriceTier.CHEAP);
 
-        // Stub sequential calls when mempool is not congested
-        when(priceTierClassifier.classifyUsingIqr(any(), any()))
-                .thenReturn(PriceTier.CHEAP, PriceTier.NORMAL, PriceTier.EXPENSIVE);
+        var actualCtx = priceTierAnalyzer.analyze(baseCtx);
 
-        var r1 = priceTierAnalyzer.analyze(base.toBuilder()
-                .newTransaction(new Transaction("t1", new BigDecimal("9.99"), BigDecimal.ZERO, 100, Instant.EPOCH))
-                .build());
-        assertEquals(PriceTier.CHEAP, r1.getPriceTier());
-
-        var r2 = priceTierAnalyzer.analyze(base.toBuilder()
-                .newTransaction(new Transaction("t2", new BigDecimal("15"), BigDecimal.ZERO, 100, Instant.EPOCH))
-                .build());
-        assertEquals(PriceTier.NORMAL, r2.getPriceTier());
-
-        var r3 = priceTierAnalyzer.analyze(base.toBuilder()
-                .newTransaction(new Transaction("t3", new BigDecimal("25"), BigDecimal.ZERO, 100, Instant.EPOCH))
-                .build());
-        assertEquals(PriceTier.EXPENSIVE, r3.getPriceTier());
-
-        verify(priceTierClassifier, times(3)).classifyUsingIqr(any(), any());
+        assertThat(actualCtx.getPriceTier()).isEqualTo(PriceTier.CHEAP);
+        assertThat(actualCtx)
+                .usingRecursiveComparison()
+                .ignoringFields("priceTier")
+                .isEqualTo(baseCtx);
+        verify(priceTierClassifier).classifyUsingIqr(actualCtx.getNewTransaction().feePerVSize(), baseCtx.getFeeWindowStatsSummary().iqrRange());
         verify(priceTierClassifier, never()).classifyUsingMempool(any(), any());
     }
 
-    private static AnalysisContext baseContext(BigDecimal fee, int mempoolSize, Range<BigDecimal> iqr, Range<BigDecimal> fences) {
+    private static AnalysisContext baseContext(BigDecimal fee, int mempoolSize) {
         var tx = new Transaction("tx", fee, BigDecimal.ZERO, 100, Instant.EPOCH);
         var summary = FeeWindowStatsSummary.builder()
                 .transactionCount(10)
                 .outliersCount(0)
                 .avgFeePerVByte(BigDecimal.ZERO)
                 .median(BigDecimal.ZERO)
-                .iqrRange(iqr)
-                .tukeyFences(fences)
+                .iqrRange(DEFAULT_IQR_RANGE)
+                .tukeyFences(Mockito.mock(Range.class))
                 .build();
         return AnalysisContext.builder()
                 .newTransaction(tx)
                 .feeWindowStatsSummary(summary)
-                .mempoolStats(new MempoolStats(50, 25, 10, mempoolSize))
+                .mempoolStats(MempoolStats.builder()
+                        .fastFeePerVByte(50)
+                        .mediumFeePerVByte(25)
+                        .slowFeePerVByte(10)
+                        .mempoolSize(mempoolSize)
+                        .build())
                 .build();
-    }
-
-    private static Range<BigDecimal> defaultIqr() {
-        return Range.closed(new BigDecimal("10"), new BigDecimal("20"));
-    }
-
-    private static Range<BigDecimal> defaultFences() {
-        return Range.closed(new BigDecimal("5"), new BigDecimal("30"));
     }
 }

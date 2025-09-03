@@ -11,28 +11,30 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SpamFeeAnalyzerTest {
+    private static final Range<BigDecimal> TUKEY_FENCES_LOW_5_HIGH_20 = Range.closed(new BigDecimal("5"), new BigDecimal("20"));
     private final SpamFeeAnalyzer analyzer = new SpamFeeAnalyzer();
 
     @Test
     void addsScamPatternWhenBelowLowerFence() {
-        var statsSummary = summary(Range.closed(new BigDecimal("5"), new BigDecimal("20")));
+        var statsSummary = summary(TUKEY_FENCES_LOW_5_HIGH_20);
         var analysisContext = analyzer.analyze(ctx(new BigDecimal("4.99"), statsSummary));
         assertTrue(analysisContext.getPatterns().contains(PatternType.SCAM));
     }
 
     @Test
     void doesNotAddScamWhenEqualsLowerFence() {
-        var statsSummary = summary(Range.closed(new BigDecimal("5"), new BigDecimal("20")));
+        var statsSummary = summary(TUKEY_FENCES_LOW_5_HIGH_20);
         var analysisContext = analyzer.analyze(ctx(new BigDecimal("5.00"), statsSummary));
         assertFalse(analysisContext.getPatterns().contains(PatternType.SCAM));
     }
 
     @Test
     void doesNotAddScamWhenAboveLowerFence() {
-        var statsSummary = summary(Range.closed(new BigDecimal("5"), new BigDecimal("20")));
+        var statsSummary = summary(TUKEY_FENCES_LOW_5_HIGH_20);
         var analysisContext = analyzer.analyze(ctx(new BigDecimal("10.00"), statsSummary));
         assertFalse(analysisContext.getPatterns().contains(PatternType.SCAM));
     }

@@ -12,10 +12,10 @@ import java.math.BigDecimal;
 @Slf4j
 @Component
 public class SurgeFeeAnalyzer extends BaseFeeAnalyzer {
-    private final double mempoolThreshold;
+    private final double mempoolSizeFullThreshold;
 
-    public SurgeFeeAnalyzer(@Value("${app.analysis.tx.mempool-congestion-vbytes-threshold}") double mempoolThreshold) {
-        this.mempoolThreshold = mempoolThreshold;
+    public SurgeFeeAnalyzer(@Value("${app.analysis.tx.mempool-congestion-vbytes-threshold}") double mempoolSizeFullThreshold) {
+        this.mempoolSizeFullThreshold = mempoolSizeFullThreshold;
     }
 
     @Override
@@ -23,7 +23,7 @@ public class SurgeFeeAnalyzer extends BaseFeeAnalyzer {
         var mempoolStats = context.getMempoolStats();
         var feePerVSize = context.getNewTransaction().feePerVSize();
         var upperEndpoint = context.getFeeWindowStatsSummary().tukeyFences().upperEndpoint();
-        boolean isSurge = isBeyoundUpperFence(feePerVSize, upperEndpoint) &&
+        var isSurge = isBeyoundUpperFence(feePerVSize, upperEndpoint) &&
                 isFarBeyondRecommendedFastFee(feePerVSize, mempoolStats.fastFeePerVByte()) &&
                 mempoolIsFull(mempoolStats);
         if (isSurge) {
@@ -44,6 +44,6 @@ public class SurgeFeeAnalyzer extends BaseFeeAnalyzer {
     }
 
     private boolean mempoolIsFull(MempoolStats mempoolStats) {
-        return mempoolStats.mempoolSize() >= mempoolThreshold;
+        return mempoolStats.mempoolSize() >= mempoolSizeFullThreshold;
     }
 }

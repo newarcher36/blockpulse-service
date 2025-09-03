@@ -4,63 +4,95 @@ import com.blockchain.blockpulseservice.model.domain.AnalysisContext;
 import com.blockchain.blockpulseservice.model.domain.FeeWindowStatsSummary;
 import com.blockchain.blockpulseservice.model.domain.MempoolStats;
 import com.blockchain.blockpulseservice.model.domain.PatternType;
+import com.blockchain.blockpulseservice.model.domain.Transaction;
 import com.google.common.collect.Range;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class SurgeFeeAnalyzerTest {
+    private static final int MEMPOOL_SIZE_FULL_THRESHOLD = 1000;
+    private static final Range<BigDecimal> TUKEY_FENCES_LOW_5_HIGH_20 = Range.closed(new BigDecimal("5"), new BigDecimal("20"));
+    private final SurgeFeeAnalyzer analyzer = new SurgeFeeAnalyzer(MEMPOOL_SIZE_FULL_THRESHOLD);
+
     @Test
-    void addsSurgeWhenAboveUpperFenceAndFastAndMempoolFull() {
-        var analyzer = new SurgeFeeAnalyzer(1000);
-        var ctx = baseContext(new BigDecimal("30"), 1000, 25, Range.closed(new BigDecimal("10"), new BigDecimal("20")), Range.closed(new BigDecimal("5"), new BigDecimal("20")));
-        var result = analyzer.analyze(ctx);
-        assertTrue(result.getPatterns().contains(PatternType.SURGE));
+    void addsSurgeWhenAboveUpperFenceAndFastFeeAndMempoolFull() {
+        var feeAboveUpperFence = new BigDecimal("30");
+        var recommendedFastFee = 25d;
+        var mempoolSizeCongested = MEMPOOL_SIZE_FULL_THRESHOLD + 1;
+        var ctx = baseContext(feeAboveUpperFence, mempoolSizeCongested, recommendedFastFee, TUKEY_FENCES_LOW_5_HIGH_20);
+
+        var actualAnalysisContext = analyzer.analyze(ctx);
+
+        assertThat(actualAnalysisContext.getPatterns()).containsExactly(PatternType.SURGE);
+        assertThat(actualAnalysisContext)
+                .usingRecursiveComparison()
+                .ignoringFields("patterns")
+                .isEqualTo(ctx);
     }
 
     @Test
     void noSurgeWhenBelowUpperFence() {
-        var analyzer = new SurgeFeeAnalyzer(1000);
-        var ctx = baseContext(new BigDecimal("19.99"), 2000, 15, Range.closed(new BigDecimal("10"), new BigDecimal("20")), Range.closed(new BigDecimal("5"), new BigDecimal("20")));
-        var result = analyzer.analyze(ctx);
-        assertFalse(result.getPatterns().contains(PatternType.SURGE));
+        var feeBelowUpperFence = new BigDecimal("19.99");
+        var recommendedFastFee = 15d;
+        var mempoolSizeCongested = MEMPOOL_SIZE_FULL_THRESHOLD + 1;
+        var ctx = baseContext(feeBelowUpperFence, mempoolSizeCongested, recommendedFastFee, TUKEY_FENCES_LOW_5_HIGH_20);
+
+        var actualAnalysisContext = analyzer.analyze(ctx);
+
+        assertThat(actualAnalysisContext.getPatterns()).isEmpty();
+        assertThat(actualAnalysisContext).isEqualTo(ctx);
     }
 
     @Test
     void noSurgeWhenNotBeyondFastRecommended() {
-        var analyzer = new SurgeFeeAnalyzer(1000);
-        var ctx = baseContext(new BigDecimal("22"), 2000, 25, Range.closed(new BigDecimal("10"), new BigDecimal("20")), Range.closed(new BigDecimal("5"), new BigDecimal("20")));
-        var result = analyzer.analyze(ctx);
-        assertFalse(result.getPatterns().contains(PatternType.SURGE));
+        var feeNotBeyondFast = new BigDecimal("22");
+        var recommendedFastFee = 25d;
+        var mempoolSizeCongested = MEMPOOL_SIZE_FULL_THRESHOLD + 1;
+        var ctx = baseContext(feeNotBeyondFast, mempoolSizeCongested, recommendedFastFee, TUKEY_FENCES_LOW_5_HIGH_20);
+
+        var actualAnalysisContext = analyzer.analyze(ctx);
+
+        assertThat(actualAnalysisContext.getPatterns()).isEmpty();
+        assertThat(actualAnalysisContext).isEqualTo(ctx);
     }
 
     @Test
     void noSurgeWhenMempoolNotFull() {
-        var analyzer = new SurgeFeeAnalyzer(1000);
-        var ctx = baseContext(new BigDecimal("30"), 999, 25, Range.closed(new BigDecimal("10"), new BigDecimal("20")), Range.closed(new BigDecimal("5"), new BigDecimal("20")));
-        var result = analyzer.analyze(ctx);
-        assertFalse(result.getPatterns().contains(PatternType.SURGE));
+        var feeAboveUpperFence = new BigDecimal("30");
+        var mempoolSizeNotFull = MEMPOOL_SIZE_FULL_THRESHOLD - 1;
+        var recommendedFastFee = 25d;
+        var ctx = baseContext(feeAboveUpperFence, mempoolSizeNotFull, recommendedFastFee, TUKEY_FENCES_LOW_5_HIGH_20);
+
+        var actualAnalysisContext = analyzer.analyze(ctx);
+
+        assertThat(actualAnalysisContext.getPatterns()).isEmpty();
+        assertThat(actualAnalysisContext).isEqualTo(ctx);
     }
 
-    private static AnalysisContext baseContext(BigDecimal fee, int mempoolSize, double fastFee,
-                                               Range<BigDecimal> iqr, Range<BigDecimal> fences) {
-        var tx = new com.blockchain.blockpulseservice.model.domain.Transaction("tx", fee, BigDecimal.ZERO, 100, Instant.EPOCH);
+    private static AnalysisContext baseContext(BigDecimal fee, int mempoolSize, double fastFee, Range<BigDecimal> fences) {
+        var tx = new Transaction("tx", fee, BigDecimal.ZERO, 100, Instant.EPOCH);
         var summary = FeeWindowStatsSummary.builder()
-                .transactionCount(10)
-                .outliersCount(0)
-                .avgFeePerVByte(BigDecimal.ZERO)
-                .median(BigDecimal.ZERO)
-                .iqrRange(iqr)
+                .transactionCount(1)
+                .outliersCount(1)
+                .avgFeePerVByte(Mockito.mock(BigDecimal.class))
+                .median(Mockito.mock(BigDecimal.class))
+                .iqrRange(Mockito.mock(Range.class))
                 .tukeyFences(fences)
                 .build();
         return AnalysisContext.builder()
                 .newTransaction(tx)
                 .feeWindowStatsSummary(summary)
-                .mempoolStats(new MempoolStats(fastFee, 0, 0, mempoolSize))
+                .mempoolStats(MempoolStats.builder()
+                        .fastFeePerVByte(fastFee)
+                        .mediumFeePerVByte(1)
+                        .slowFeePerVByte(1)
+                        .mempoolSize(mempoolSize)
+                        .build())
                 .build();
     }
 }
-

@@ -14,11 +14,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class OutlierFeeAnalyzerTest {
+    private static final Range<BigDecimal> TUKEY_FENCES_LOW_5_HIGH_20 = Range.closed(new BigDecimal("5"), new BigDecimal("20"));
     private final OutlierFeeAnalyzer analyzer = new OutlierFeeAnalyzer();
 
     @Test
     void flagsOutlierAboveUpperFence() {
-        var summary = summary(Range.closed(new BigDecimal("5"), new BigDecimal("20")));
+        var summary = summary(TUKEY_FENCES_LOW_5_HIGH_20);
         var fee = new BigDecimal("25");
         var analysisContext = analyzer.analyze(ctx(fee, summary));
         assertTrue(analysisContext.isOutlier());
@@ -26,7 +27,7 @@ class OutlierFeeAnalyzerTest {
 
     @Test
     void flagsOutlierBelowLowerFence() {
-        var summary = summary(Range.closed(new BigDecimal("5"), new BigDecimal("20")));
+        var summary = summary(TUKEY_FENCES_LOW_5_HIGH_20);
         var fee = new BigDecimal("4.99");
         var analysisContext = analyzer.analyze(ctx(fee, summary));
         assertTrue(analysisContext.isOutlier());
@@ -34,7 +35,7 @@ class OutlierFeeAnalyzerTest {
 
     @Test
     void insideFencesIsNotOutlier() {
-        var summary = summary(Range.closed(new BigDecimal("5"), new BigDecimal("20")));
+        var summary = summary(TUKEY_FENCES_LOW_5_HIGH_20);
         var fee = new BigDecimal("10");
         var analysisContext = analyzer.analyze(ctx(fee, summary));
         assertFalse(analysisContext.isOutlier());
