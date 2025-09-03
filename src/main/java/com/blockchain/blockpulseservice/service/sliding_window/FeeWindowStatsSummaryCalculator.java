@@ -39,7 +39,7 @@ public class FeeWindowStatsSummaryCalculator {
         return feeQuantiles.median(sortedFees);
     }
 
-    public Range<BigDecimal> iqrRange(List<BigDecimal> sortedFees) {
+    private Range<BigDecimal> iqrRange(List<BigDecimal> sortedFees) {
         return tukey.iqrRange(sortedFees);
     }
 

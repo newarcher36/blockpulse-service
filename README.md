@@ -99,6 +99,13 @@ Notes:
 - The presence of BlockPulseServiceApplication.java and config packages indicates Spring Boot.
 - WebSocket and REST client packages suggest Spring’s Web/WebSocket stack for ingestion.
 
+## Why Reactor for SSE
+
+- Fanout efficiency: serves many concurrent clients with few threads.
+- Backpressure: protects both server and clients from overload.
+- Easy pacing: operators like `sample(2s)`/`bufferTimeout` send readable updates (e.g., latest every 2 seconds).
+- Maintainable: concise, composable streaming code that’s easy to evolve.
+
 ## ️ Architecture
 
 High level: event-driven, streaming analytics pipeline with clear separation of concerns.

@@ -23,7 +23,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 
 @WebFluxTest(controllers = AnalysisController.class)
@@ -66,12 +65,11 @@ class AnalysisControllerTest {
                 .returnResult(new ParameterizedTypeReference<ServerSentEvent<AnalyzedTransactionEvent>>() {
                 });
 
-        // Use virtual time to advance the 2s sampling window without real waits
         StepVerifier.withVirtualTime(() -> result.getResponseBody()
-                        .map(ServerSentEvent::data)
+                        .mapNotNull(ServerSentEvent::data)
                         .filter(Objects::nonNull))
                 .thenAwait(Duration.ofSeconds(2))
-                .assertNext(e -> assertThat(e).isEqualTo(event))
+                .assertNext(actualEvent -> assertThat(actualEvent).isEqualTo(event))
                 .thenCancel()
                 .verify();
     }

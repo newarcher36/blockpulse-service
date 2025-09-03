@@ -15,6 +15,6 @@ public record FeeWindowStatsSummary(int transactionCount,
                                     Range<BigDecimal> iqrRange,
                                     Range<BigDecimal> tukeyFences) {
     public static FeeWindowStatsSummary empty() {
-        return new FeeWindowStatsSummary(0, 0, ZERO, ZERO, Range.open(ZERO, ZERO), Range.open(ZERO, ZERO));
+        return new FeeWindowStatsSummary(0, 0, ZERO, ZERO, Range.singleton(ZERO), Range.singleton(ZERO));
     }
 }
