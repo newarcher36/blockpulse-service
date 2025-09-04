@@ -40,7 +40,7 @@ public class TransactionAnalyzerService {
 
     @EventListener
     public void onMempoolStatsUpdated(MempoolStatsUpdatedEvent event) {
-        this.mempoolStats.set(mempoolStats.get());
-        log.debug("Received MempoolStats update: {}", mempoolStats);
+        this.mempoolStats.set(event.stats());
+        log.debug("Received MempoolStats update: {}", event.stats());
     }
 }
