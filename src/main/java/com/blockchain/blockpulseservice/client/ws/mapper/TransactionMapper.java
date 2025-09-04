@@ -1,4 +1,4 @@
-package com.blockchain.blockpulseservice.mapper;
+package com.blockchain.blockpulseservice.client.ws.mapper;
 
 import com.blockchain.blockpulseservice.model.domain.Transaction;
 import com.blockchain.blockpulseservice.model.dto.MempoolTransactionsDTOWrapper;

@@ -2,7 +2,7 @@ package com.blockchain.blockpulseservice.client.ws;
 
 import com.blockchain.blockpulseservice.client.ws.manager.ConnectionStateManager;
 import com.blockchain.blockpulseservice.client.ws.manager.ReconnectionManager;
-import com.blockchain.blockpulseservice.mapper.TransactionMapper;
+import com.blockchain.blockpulseservice.client.ws.mapper.TransactionMapper;
 import com.blockchain.blockpulseservice.model.dto.MempoolTransactionsDTOWrapper;
 import com.blockchain.blockpulseservice.event.NewTransactionEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
