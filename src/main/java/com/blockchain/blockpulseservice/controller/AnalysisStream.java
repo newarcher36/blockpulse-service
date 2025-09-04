@@ -1,11 +1,11 @@
-package com.blockchain.blockpulseservice.service;
+package com.blockchain.blockpulseservice.controller;
 
 import com.blockchain.blockpulseservice.event.AnalyzedTransactionEvent;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
-@Service
+@Component
 public class AnalysisStream {
 
     // Keeps only the most recent item; new subscribers get it immediately.

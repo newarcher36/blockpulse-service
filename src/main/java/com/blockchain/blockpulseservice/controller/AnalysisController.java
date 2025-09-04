@@ -1,7 +1,6 @@
 package com.blockchain.blockpulseservice.controller;
 
 import com.blockchain.blockpulseservice.event.AnalyzedTransactionEvent;
-import com.blockchain.blockpulseservice.service.AnalysisStream;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.GetMapping;

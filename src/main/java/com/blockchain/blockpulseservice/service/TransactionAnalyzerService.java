@@ -1,6 +1,7 @@
 package com.blockchain.blockpulseservice.service;
 
 import com.blockchain.blockpulseservice.client.rest.MempoolStatsUpdater;
+import com.blockchain.blockpulseservice.controller.AnalysisStream;
 import com.blockchain.blockpulseservice.model.domain.AnalysisContext;
 import com.blockchain.blockpulseservice.model.domain.Transaction;
 import com.blockchain.blockpulseservice.model.domain.FeeWindowStatsSummary;
