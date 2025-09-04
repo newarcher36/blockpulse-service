@@ -1,6 +1,6 @@
 package com.blockchain.blockpulseservice.service.sliding_window;
 
-import com.blockchain.blockpulseservice.event.NewTransactionEvent;
+import com.blockchain.blockpulseservice.model.event.NewTransactionEvent;
 import com.blockchain.blockpulseservice.model.domain.Transaction;
 import com.blockchain.blockpulseservice.service.TransactionAnalyzerService;
 import com.google.common.collect.TreeMultiset;

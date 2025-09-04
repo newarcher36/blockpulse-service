@@ -1,7 +1,7 @@
 package com.blockchain.blockpulseservice.service;
 
 import com.blockchain.blockpulseservice.controller.AnalysisStream;
-import com.blockchain.blockpulseservice.event.AnalyzedTransactionEvent;
+import com.blockchain.blockpulseservice.model.event.AnalyzedTransactionEvent;
 import com.blockchain.blockpulseservice.model.domain.PatternType;
 import com.blockchain.blockpulseservice.model.domain.PriceTier;
 import com.blockchain.blockpulseservice.model.dto.TransactionWindowSnapshotDTO;

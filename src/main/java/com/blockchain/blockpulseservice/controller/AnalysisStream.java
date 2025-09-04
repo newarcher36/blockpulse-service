@@ -1,6 +1,6 @@
 package com.blockchain.blockpulseservice.controller;
 
-import com.blockchain.blockpulseservice.event.AnalyzedTransactionEvent;
+import com.blockchain.blockpulseservice.model.event.AnalyzedTransactionEvent;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;

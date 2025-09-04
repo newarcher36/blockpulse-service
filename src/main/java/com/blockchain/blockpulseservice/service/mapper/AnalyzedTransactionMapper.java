@@ -1,6 +1,6 @@
 package com.blockchain.blockpulseservice.service.mapper;
 
-import com.blockchain.blockpulseservice.event.AnalyzedTransactionEvent;
+import com.blockchain.blockpulseservice.model.event.AnalyzedTransactionEvent;
 import com.blockchain.blockpulseservice.model.domain.AnalysisContext;
 import com.blockchain.blockpulseservice.model.domain.FeeWindowStatsSummary;
 import com.blockchain.blockpulseservice.model.dto.TransactionWindowSnapshotDTO;

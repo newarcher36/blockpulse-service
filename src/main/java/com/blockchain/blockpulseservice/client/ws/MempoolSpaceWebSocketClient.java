@@ -4,7 +4,7 @@ import com.blockchain.blockpulseservice.client.ws.manager.ConnectionStateManager
 import com.blockchain.blockpulseservice.client.ws.manager.ReconnectionManager;
 import com.blockchain.blockpulseservice.client.ws.mapper.TransactionMapper;
 import com.blockchain.blockpulseservice.model.dto.MempoolTransactionsDTOWrapper;
-import com.blockchain.blockpulseservice.event.NewTransactionEvent;
+import com.blockchain.blockpulseservice.model.event.NewTransactionEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
