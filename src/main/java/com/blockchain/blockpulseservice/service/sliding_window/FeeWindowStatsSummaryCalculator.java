@@ -1,7 +1,9 @@
 package com.blockchain.blockpulseservice.service.sliding_window;
 
 import com.blockchain.blockpulseservice.model.domain.FeeWindowStatsSummary;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Range;
+import com.google.common.collect.TreeMultiset;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -16,19 +18,32 @@ public class FeeWindowStatsSummaryCalculator {
     private final TukeyFenceCalculator tukey;
     private final OutlierCounter outlierCounter;
 
-    public FeeWindowStatsSummary calculateComprehensiveStats(List<BigDecimal> sortedFees, BigDecimal sum) {
+    public FeeWindowStatsSummary calculateComprehensiveStats(TreeMultiset<BigDecimal> sortedFees) {
         if (sortedFees.isEmpty()) {
             return FeeWindowStatsSummary.empty();
         }
-        var fences = tukeyFences(sortedFees);
+        var aggregate = aggregateFees(sortedFees);
+        var feeList = aggregate.sortedFees();
+        var sum = aggregate.sum();
+        var fences = tukeyFences(feeList);
         return FeeWindowStatsSummary.builder()
-                .transactionCount(sortedFees.size())
+                .transactionCount(feeList.size())
                 .outliersCount(outlierCounter.countOutliers(sortedFees, fences))
-                .avgFeePerVByte(average(sum, sortedFees.size()))
-                .median(median(sortedFees))
-                .iqrRange(iqrRange(sortedFees))
+                .avgFeePerVByte(average(sum, feeList.size()))
+                .median(median(feeList))
+                .iqrRange(iqrRange(feeList))
                 .tukeyFences(fences)
                 .build();
+    }
+
+    private FeesAggregate aggregateFees(TreeMultiset<BigDecimal> fees) {
+        var listBuilder = ImmutableList.<BigDecimal>builderWithExpectedSize(fees.size());
+        var sum = BigDecimal.ZERO;
+        for (var f : fees) {
+            listBuilder.add(f);
+            sum = sum.add(f);
+        }
+        return new FeesAggregate(listBuilder.build(), sum);
     }
 
     private BigDecimal average(BigDecimal sum, int count) {
@@ -46,4 +61,6 @@ public class FeeWindowStatsSummaryCalculator {
     private Range<BigDecimal> tukeyFences(List<BigDecimal> fees) {
         return tukey.tukeyFences(fees);
     }
+
+    private record FeesAggregate(ImmutableList<BigDecimal> sortedFees, BigDecimal sum) {}
 }

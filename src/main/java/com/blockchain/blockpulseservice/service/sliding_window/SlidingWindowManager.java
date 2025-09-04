@@ -3,7 +3,6 @@ package com.blockchain.blockpulseservice.service.sliding_window;
 import com.blockchain.blockpulseservice.event.NewTransactionEvent;
 import com.blockchain.blockpulseservice.model.domain.Transaction;
 import com.blockchain.blockpulseservice.service.TransactionAnalyzerService;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.TreeMultiset;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -49,8 +48,7 @@ public class SlidingWindowManager {
         sortedFees.add(tx.feePerVSize());
         feeInsertionOrder.addLast(tx.feePerVSize());
 
-        var agg = aggregateFees(sortedFees, sortedFees.size());
-        var feeWindowStatsSummary = feeWindowStatsSummaryCalculator.calculateComprehensiveStats(agg.fees(), agg.sum());
+        var feeWindowStatsSummary = feeWindowStatsSummaryCalculator.calculateComprehensiveStats(sortedFees);
         analyzerService.processTransaction(tx, feeWindowStatsSummary);
     }
 
@@ -58,10 +56,7 @@ public class SlidingWindowManager {
         if (sortedFees.size() >= slidingWindowSize) {
             var oldestFee = feeInsertionOrder.pollFirst();
             log.debug("Sliding window is full, removing oldest tx feePerVSize: {}", oldestFee);
-            boolean removed = sortedFees.remove(oldestFee);
-            if (!removed) {
-                log.warn("Oldest fee not found in sliding window: {}", oldestFee);
-            }
+            sortedFees.remove(oldestFee);
         }
     }
 
@@ -75,17 +70,5 @@ public class SlidingWindowManager {
             return false;
         }
         return true;
-    }
-
-    private record FeesAggregate(ImmutableList<BigDecimal> fees, BigDecimal sum) {}
-
-    private FeesAggregate aggregateFees(Iterable<BigDecimal> fees, int size) {
-        var builder = ImmutableList.<BigDecimal>builderWithExpectedSize(size);
-        var sum = ZERO;
-        for (var f : fees) {
-            builder.add(f);
-            sum = sum.add(f);
-        }
-        return new FeesAggregate(builder.build(), sum);
     }
 }
