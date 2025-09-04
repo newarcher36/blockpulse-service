@@ -1,6 +1,7 @@
 package com.blockchain.blockpulseservice.controller;
 
 import com.blockchain.blockpulseservice.model.event.AnalyzedTransactionEvent;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
@@ -8,15 +9,16 @@ import reactor.core.publisher.Sinks;
 @Component
 public class AnalysisStream {
 
-    // Keeps only the most recent item; new subscribers get it immediately.
-    private final Sinks.Many<AnalyzedTransactionEvent> sink = Sinks.many().replay().latest();
+    private final Sinks.Many<AnalyzedTransactionEvent> sink;
 
-    /** Push a new snapshot (non-blocking). */
-    public void publish(AnalyzedTransactionEvent dto) {
-        sink.tryEmitNext(dto); // ignore backpressure; latest wins
+    public AnalysisStream(@Value("${app.analysis.tx.sliding-window-size:1000}") int replayLimit) {
+        this.sink = Sinks.many().replay().limit(replayLimit);
     }
 
-    /** Public flux for the controller. */
+    public void publish(AnalyzedTransactionEvent dto) {
+        sink.tryEmitNext(dto);
+    }
+
     public Flux<AnalyzedTransactionEvent> flux() {
         return sink.asFlux();
     }

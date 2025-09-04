@@ -1,54 +1,47 @@
 package com.blockchain.blockpulseservice.client.rest;
 
 import com.blockchain.blockpulseservice.model.domain.MempoolStats;
-import com.blockchain.blockpulseservice.model.dto.RecommendedTransactionFeeDTO;
 import com.blockchain.blockpulseservice.model.dto.MempoolInfoDTO;
+import com.blockchain.blockpulseservice.model.dto.RecommendedTransactionFeeDTO;
+import com.blockchain.blockpulseservice.model.event.MempoolStatsUpdatedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 @Slf4j
 @Service
 public class MempoolStatsUpdater {
-    private static final ExecutorService ioExecutor = Executors.newFixedThreadPool(2);
     private static final int REQUEST_TIMEOUT = 2;
     private final String feeApiUrl;
     private final String mempoolInfoUrl;
     private final RestTemplate restTemplate;
-    private volatile MempoolStats mempoolStats;
+    private final Executor ioExecutor;
+    private final ApplicationEventPublisher eventPublisher;
 
     public MempoolStatsUpdater(@Value("${app.mempool.space.rest.fee-api-url}") String feeApiUrl,
                                @Value("${app.mempool.space.rest.mempool-info-api-url}") String mempoolInfoUrl,
-                               RestTemplate restTemplate) {
+                               RestTemplate restTemplate,
+                               Executor mempoolRestExecutor,
+                               ApplicationEventPublisher eventPublisher) {
         this.feeApiUrl = feeApiUrl;
         this.mempoolInfoUrl = mempoolInfoUrl;
         this.restTemplate = restTemplate;
+        this.ioExecutor = mempoolRestExecutor;
+        this.eventPublisher = eventPublisher;
     }
 
     @Scheduled(fixedRate = 10000) // Every 10 seconds
     public void updateMempoolData() {
-        var feeFuture = CompletableFuture
-                .supplyAsync(fetchFeeData(), ioExecutor)
-                .orTimeout(REQUEST_TIMEOUT, TimeUnit.SECONDS)
-                .exceptionally(ex -> {
-                    log.error("Failed to fetch fee data", ex);
-                    return null;
-                });
-        var mempoolFuture = CompletableFuture
-                .supplyAsync(fetchMempoolInfo(), ioExecutor)
-                .orTimeout(REQUEST_TIMEOUT, TimeUnit.SECONDS)
-                .exceptionally(ex -> {
-                    log.error("Failed to update mempool stats", ex);
-                    return null;
-                });
+        var feeFuture = initFuture(fetchFeeData(), "Failed to fetch fee data");
+        var mempoolFuture = initFuture(fetchMempoolInfo(), "Failed to update mempool stats");
 
         feeFuture.thenCombine(mempoolFuture, (feeDto, mempoolInfoDTO) -> {
             if (feeDto != null && mempoolInfoDTO != null) {
@@ -57,8 +50,8 @@ public class MempoolStatsUpdater {
             return null;
         }).thenAccept(mempoolStats -> {
             if (mempoolStats != null) {
-                this.mempoolStats = mempoolStats;
                 log.debug("Updated mempool data: {}", mempoolStats);
+                eventPublisher.publishEvent(new MempoolStatsUpdatedEvent(mempoolStats));
             } else {
                 log.warn("Skipping update due to missing data.");
             }
@@ -66,6 +59,16 @@ public class MempoolStatsUpdater {
             log.error("Unexpected error while processing mempool data", ex);
             return null;
         });
+    }
+
+    private <T> CompletableFuture<T> initFuture(Supplier<T> supplier, String errorMessage) {
+        return CompletableFuture
+                .supplyAsync(supplier, ioExecutor)
+                .orTimeout(REQUEST_TIMEOUT, TimeUnit.SECONDS)
+                .exceptionally(ex -> {
+                    log.error(errorMessage, ex);
+                    return null;
+                });
     }
 
     private Supplier<RecommendedTransactionFeeDTO> fetchFeeData() {
@@ -83,9 +86,5 @@ public class MempoolStatsUpdater {
                 .slowFeePerVByte(feeDto.hourFee())
                 .mempoolSize(mempoolInfoDTO.memPoolSize())
                 .build();
-    }
-
-    public MempoolStats getMempoolStats() {
-        return mempoolStats == null ? MempoolStats.empty() : mempoolStats;
     }
 }

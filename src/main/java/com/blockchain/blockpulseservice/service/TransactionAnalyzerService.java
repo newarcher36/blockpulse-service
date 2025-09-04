@@ -1,15 +1,19 @@
 package com.blockchain.blockpulseservice.service;
 
-import com.blockchain.blockpulseservice.client.rest.MempoolStatsUpdater;
 import com.blockchain.blockpulseservice.controller.AnalysisStream;
 import com.blockchain.blockpulseservice.model.domain.AnalysisContext;
-import com.blockchain.blockpulseservice.model.domain.Transaction;
 import com.blockchain.blockpulseservice.model.domain.FeeWindowStatsSummary;
+import com.blockchain.blockpulseservice.model.domain.MempoolStats;
+import com.blockchain.blockpulseservice.model.domain.Transaction;
+import com.blockchain.blockpulseservice.model.event.MempoolStatsUpdatedEvent;
 import com.blockchain.blockpulseservice.service.analysis.FeeAnalyzer;
 import com.blockchain.blockpulseservice.service.mapper.AnalyzedTransactionMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
+
+import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @Service
@@ -17,20 +21,26 @@ import org.springframework.stereotype.Service;
 public class TransactionAnalyzerService {
     private final FeeAnalyzer analysisChain;
     private final AnalysisStream analysisStream;
-    private final MempoolStatsUpdater mempoolStatsUpdater;
     private final AnalyzedTransactionMapper analyzedTransactionMapper;
+    private final AtomicReference<MempoolStats> mempoolStats = new AtomicReference<>(MempoolStats.empty());
 
     public void processTransaction(Transaction transaction, FeeWindowStatsSummary feeWindowStatsSummary) {
         log.debug("Processing transaction: {}", transaction.hash());
         var context = AnalysisContext.builder()
                 .newTransaction(transaction)
                 .feeWindowStatsSummary(feeWindowStatsSummary)
-                .mempoolStats(mempoolStatsUpdater.getMempoolStats())
+                .mempoolStats(mempoolStats.get())
                 .build();
 
         var result = analysisChain.analyze(context);
         var analyzedTransaction = analyzedTransactionMapper.map(result);
         log.debug("Analyzed transaction: {}", analyzedTransaction);
         analysisStream.publish(analyzedTransaction);
+    }
+
+    @EventListener
+    public void onMempoolStatsUpdated(MempoolStatsUpdatedEvent event) {
+        this.mempoolStats.set(mempoolStats.get());
+        log.debug("Received MempoolStats update: {}", mempoolStats);
     }
 }

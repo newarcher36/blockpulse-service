@@ -23,7 +23,7 @@ public class SurgeFeeAnalyzer extends BaseFeeAnalyzer {
         var mempoolStats = context.getMempoolStats();
         var feePerVSize = context.getNewTransaction().feePerVSize();
         var upperEndpoint = context.getFeeWindowStatsSummary().tukeyFences().upperEndpoint();
-        var isSurge = isBeyoundUpperFence(feePerVSize, upperEndpoint) &&
+        var isSurge = isBeyondUpperFence(feePerVSize, upperEndpoint) &&
                 isFarBeyondRecommendedFastFee(feePerVSize, mempoolStats.fastFeePerVByte()) &&
                 mempoolIsFull(mempoolStats);
         if (isSurge) {
@@ -35,12 +35,12 @@ public class SurgeFeeAnalyzer extends BaseFeeAnalyzer {
         return context;
     }
 
-    private static boolean isBeyoundUpperFence(BigDecimal feePerVSize, BigDecimal upperEndpoint) {
+    private static boolean isBeyondUpperFence(BigDecimal feePerVSize, BigDecimal upperEndpoint) {
         return feePerVSize.compareTo(upperEndpoint) > 0;
     }
 
     private boolean isFarBeyondRecommendedFastFee(BigDecimal feePerVSize, double fastFeePerVByte) {
-        return isBeyoundUpperFence(feePerVSize, BigDecimal.valueOf(fastFeePerVByte));
+        return isBeyondUpperFence(feePerVSize, BigDecimal.valueOf(fastFeePerVByte));
     }
 
     private boolean mempoolIsFull(MempoolStats mempoolStats) {

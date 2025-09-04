@@ -89,4 +89,3 @@ class SlidingWindowManagerTest {
         return new Transaction(id, new BigDecimal(fee), BigDecimal.ZERO, 100, Instant.EPOCH);
     }
 }
-

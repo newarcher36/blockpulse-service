@@ -14,12 +14,12 @@ import java.time.Instant;
 import java.util.Set;
 
 class AnalysisStreamTest {
-
+    private static final int REPLAY_LIMIT = 2;
     private AnalysisStream stream;
 
     @BeforeEach
     void setUp() {
-        stream = new AnalysisStream();
+        stream = new AnalysisStream(REPLAY_LIMIT);
     }
 
     @Test
@@ -34,7 +34,7 @@ class AnalysisStreamTest {
     }
 
     @Test
-    void replaysLatestToNewSubscribers() {
+    void replaysLatestToNewSubscribersWithSingleEmission() {
         var e1 = sampleEvent("a1");
         stream.publish(e1);
 
@@ -45,7 +45,7 @@ class AnalysisStreamTest {
     }
 
     @Test
-    void latestWinsForLateSubscribers() {
+    void latestWinsForLateSubscribersReplaysLastTwoWithLimitTwo() {
         var e1 = sampleEvent("a1");
         var e2 = sampleEvent("a2");
 
@@ -59,9 +59,25 @@ class AnalysisStreamTest {
                 .thenCancel()
                 .verify();
 
-        // Late subscriber immediately receives only the latest (replay latest)
+        // Late subscriber immediately receives the last two events (replay limit = 2)
         StepVerifier.create(stream.flux())
-                .expectNext(e2)
+                .expectNext(e1, e2)
+                .thenCancel()
+                .verify();
+    }
+
+    @Test
+    void replaysLastTwoToNewSubscribersWhenBufferExceedsLimit() {
+        var e1 = sampleEvent("a1");
+        var e2 = sampleEvent("a2");
+        var e3 = sampleEvent("a3");
+
+        stream.publish(e1);
+        stream.publish(e2);
+        stream.publish(e3);
+
+        StepVerifier.create(stream.flux())
+                .expectNext(e2, e3)
                 .thenCancel()
                 .verify();
     }
@@ -81,4 +97,3 @@ class AnalysisStreamTest {
                 .build();
     }
 }
-
