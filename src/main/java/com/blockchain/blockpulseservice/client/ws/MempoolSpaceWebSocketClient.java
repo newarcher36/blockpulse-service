@@ -22,6 +22,7 @@ public class MempoolSpaceWebSocketClient extends BaseWebSocketSessionClient {
     private final TransactionMapper transactionMapper;
     private final ObjectMapper objectMapper;
     private final ApplicationEventPublisher eventPublisher;
+    private final String subscribeMessage;
 
     public MempoolSpaceWebSocketClient(TransactionMapper transactionMapper,
                                        ObjectMapper objectMapper,
@@ -30,25 +31,30 @@ public class MempoolSpaceWebSocketClient extends BaseWebSocketSessionClient {
                                        ReconnectionManager reconnectionManager,
                                        WebSocketMessageHandler messageHandler,
                                        WebSocketMessageSender messageSender,
+                                       WebSocketSessionHolder sessionHolder,
                                        @Value("${app.mempool.space.websocket.track-mempool-api-url}") String serverUri,
                                        @Value("${app.websocket.message-size-limit}") int messageSizeLimit,
-                                       ApplicationEventPublisher eventPublisher) {
+                                       ApplicationEventPublisher eventPublisher,
+                                       @Value("${app.mempool.space.websocket.subscribe-message:{ \"track-mempool\": true }}") String subscribeMessage) {
         super(URI.create(serverUri),
                 messageSizeLimit,
                 webSocketClient,
                 connectionState,
                 reconnectionManager,
                 messageHandler,
-                messageSender);
+                messageSender,
+                sessionHolder);
         this.transactionMapper = transactionMapper;
         this.objectMapper = objectMapper;
         this.eventPublisher = eventPublisher;
+        this.subscribeMessage = subscribeMessage;
     }
 
     @Override
     protected void onConnectionEstablished(WebSocketSession session) {
         log.info("Connected to {}", serverUri);
-        subscribeToTrackMempoolTransactions();
+        sendMessage(this.subscribeMessage);
+        log.info("Subscribed to track mempool transactions");
     }
 
     @Override
@@ -69,10 +75,4 @@ public class MempoolSpaceWebSocketClient extends BaseWebSocketSessionClient {
         }
     }
 
-    private void subscribeToTrackMempoolTransactions() {
-        // TODO: to properties.
-        var subscribeMessage = "{ \"track-mempool\": true }";
-        sendMessage(subscribeMessage);
-        log.info("Subscribed to track mempool transactions");
-    }
 }

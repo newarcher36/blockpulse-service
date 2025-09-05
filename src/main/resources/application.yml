@@ -37,6 +37,7 @@ app:
       mempool-info-api-url: https://mempool.space/api/mempool
     websocket:
       track-mempool-api-url: wss://mempool.space/api/v1/ws
+      subscribe-message: '{ "track-mempool": true }'
   websocket:
     message-size-limit: 16777216
     reconnect-delay: 5000

@@ -17,13 +17,12 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class WebSocketMessageSenderTest {
-
-    private final WebSocketMessageSender sender = new WebSocketMessageSender();
-
-    @Mock private WebSocketSession session;
-    @Captor private ArgumentCaptor<TextMessage> msgCaptor;
-
     private static final URI SERVER_URI = URI.create("ws://example.test");
+    private final WebSocketMessageSender sender = new WebSocketMessageSender();
+    @Mock
+    private WebSocketSession session;
+    @Captor
+    private ArgumentCaptor<TextMessage> msgCaptor;
 
     @Test
     void doesNothingWhenSessionIsNull() {
@@ -37,7 +36,7 @@ class WebSocketMessageSenderTest {
     @Test
     void doesNothingWhenSessionClosed() throws Exception {
         when(session.isOpen()).thenReturn(false);
-        Runnable failure = mock(Runnable.class);
+        var failure = mock(Runnable.class);
 
         sender.sendMessage(session, "hello", SERVER_URI, failure);
 
@@ -48,7 +47,7 @@ class WebSocketMessageSenderTest {
     @Test
     void sendsWhenSessionOpen() throws Exception {
         when(session.isOpen()).thenReturn(true);
-        Runnable failure = mock(Runnable.class);
+        var failure = mock(Runnable.class);
 
         sender.sendMessage(session, "hello", SERVER_URI, failure);
 
@@ -61,11 +60,10 @@ class WebSocketMessageSenderTest {
     void runsFailureCallbackOnIOException() throws Exception {
         when(session.isOpen()).thenReturn(true);
         doThrow(new IOException("boom")).when(session).sendMessage(any());
-        Runnable failure = mock(Runnable.class);
+        var failure = mock(Runnable.class);
 
         sender.sendMessage(session, "hello", SERVER_URI, failure);
 
         verify(failure, times(1)).run();
     }
 }
-

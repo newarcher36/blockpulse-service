@@ -35,7 +35,6 @@ class TransactionAnalyzerServiceTest {
     @InjectMocks
     private TransactionAnalyzerService service;
 
-
     @Test
     void usesEmptyMempoolStatsBeforeAnyEvent() {
         var expectedContext = AnalysisContext.builder()

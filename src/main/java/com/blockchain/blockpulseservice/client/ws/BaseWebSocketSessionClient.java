@@ -15,7 +15,7 @@ import java.util.function.Consumer;
 
 @Slf4j
 public abstract class BaseWebSocketSessionClient implements WebSocketHandler {
-    private WebSocketSession session;
+    private final WebSocketSessionHolder sessionHolder;
     protected final URI serverUri;
     private final WebSocketClient webSocketClient;
     private final ConnectionStateManager connectionState;
@@ -30,7 +30,8 @@ public abstract class BaseWebSocketSessionClient implements WebSocketHandler {
                                          ConnectionStateManager connectionState,
                                          ReconnectionManager reconnectionManager,
                                          WebSocketMessageHandler messageHandler,
-                                         WebSocketMessageSender messageSender) {
+                                         WebSocketMessageSender messageSender,
+                                         WebSocketSessionHolder sessionHolder) {
         this.serverUri = serverUri;
         this.messageSizeLimit = messageSizeLimit;
         this.webSocketClient = webSocketClient;
@@ -38,6 +39,7 @@ public abstract class BaseWebSocketSessionClient implements WebSocketHandler {
         this.reconnectionManager = reconnectionManager;
         this.messageHandler = messageHandler;
         this.messageSender = messageSender;
+        this.sessionHolder = sessionHolder;
     }
 
 
@@ -58,8 +60,8 @@ public abstract class BaseWebSocketSessionClient implements WebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
-        this.session = session;
-        this.session.setTextMessageSizeLimit(messageSizeLimit);
+        this.sessionHolder.set(session);
+        session.setTextMessageSizeLimit(messageSizeLimit);
         connectionState.setConnected(true);
 
         log.info("WebSocket connected to: {}", serverUri);
@@ -94,14 +96,13 @@ public abstract class BaseWebSocketSessionClient implements WebSocketHandler {
         return false;
     }
 
-    private void handleConnectionLoss() {
-        connectionState.setConnected(false);
-        reconnectionManager.scheduleReconnect(this::connect, serverUri);
+    protected void sendMessage(String message) {
+        messageSender.sendMessage(sessionHolder.getSessionIfOpen(), message, serverUri, this::connect);
     }
 
-    protected void sendMessage(String message) {
-        messageSender.sendMessage(session, message, serverUri, this::connect);
-    }
+    protected abstract void onConnectionEstablished(WebSocketSession session);
+
+    protected abstract void processMessage(String message);
 
     public void disconnect() {
         reconnectionManager.cancelReconnect();
@@ -110,8 +111,14 @@ public abstract class BaseWebSocketSessionClient implements WebSocketHandler {
         log.info("Disconnected from {}", serverUri);
     }
 
+    private void handleConnectionLoss() {
+        connectionState.setConnected(false);
+        reconnectionManager.scheduleReconnect(this::connect, serverUri);
+    }
+
     private void closeSession() {
-        if (session != null && session.isOpen()) {
+        WebSocketSession session = sessionHolder.getSessionIfOpen();
+        if (session != null) {
             try {
                 session.close(CloseStatus.NORMAL);
             } catch (IOException e) {
@@ -119,11 +126,7 @@ public abstract class BaseWebSocketSessionClient implements WebSocketHandler {
             }
         }
     }
-
     private boolean isConnected() {
-        return connectionState.isConnected() && session != null && session.isOpen();
+        return connectionState.isConnected() && sessionHolder.isOpen();
     }
-
-    protected abstract void onConnectionEstablished(WebSocketSession session);
-    protected abstract void processMessage(String message);
 }
