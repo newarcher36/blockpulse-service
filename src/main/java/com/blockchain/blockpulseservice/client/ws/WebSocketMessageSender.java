@@ -11,7 +11,7 @@ import java.net.URI;
 @Slf4j
 @Component
 public class WebSocketMessageSender {
-    public void sendMessage(WebSocketSession session, String message, URI serverUri, Runnable onSendFailure) {
+    public void send(WebSocketSession session, String message, URI serverUri, Runnable onSendFailure) {
         if (session == null || !session.isOpen()) {
             log.warn("Cannot send message - session not open for {}", serverUri);
             return;

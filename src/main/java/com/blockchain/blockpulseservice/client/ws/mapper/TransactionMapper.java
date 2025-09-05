@@ -8,7 +8,7 @@ import java.util.List;
 
 @Component
 public class TransactionMapper {
-    public List<Transaction> mapToTransaction(List<MempoolTransactionsDTOWrapper.TransactionDTO> transactionDTOS) {
+    public List<Transaction> mapToTransaction(List<MempoolTransactionsDTOWrapper.MempoolTransactionsDTO.TransactionDTO> transactionDTOS) {
         return transactionDTOS.stream()
                 .map(t ->
                         new Transaction(t.id(), t.feePerVSize(), t.fee(), t.vSize(), t.firstSeen()))

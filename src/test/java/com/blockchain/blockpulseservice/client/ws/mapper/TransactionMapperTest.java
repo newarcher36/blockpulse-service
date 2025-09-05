@@ -16,14 +16,14 @@ class TransactionMapperTest {
 
     @Test
     void mapsTransactionDtosToDomainTransactions_preservingOrder() {
-        var t1 = new MempoolTransactionsDTOWrapper.TransactionDTO(
+        var t1 = new MempoolTransactionsDTOWrapper.MempoolTransactionsDTO.TransactionDTO(
                 "tx-1",
                 200,
                 new BigDecimal("1500"),
                 new BigDecimal("15.0"),
                 Instant.parse("2024-09-01T00:00:00Z")
         );
-        var t2 = new MempoolTransactionsDTOWrapper.TransactionDTO(
+        var t2 = new MempoolTransactionsDTOWrapper.MempoolTransactionsDTO.TransactionDTO(
                 "tx-2",
                 250,
                 new BigDecimal("2250"),

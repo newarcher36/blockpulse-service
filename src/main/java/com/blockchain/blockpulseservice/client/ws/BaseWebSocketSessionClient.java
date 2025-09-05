@@ -4,6 +4,7 @@ import com.blockchain.blockpulseservice.client.ws.manager.ConnectionStateManager
 import com.blockchain.blockpulseservice.client.ws.manager.ReconnectionManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.WebSocketMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -11,7 +12,6 @@ import org.springframework.web.socket.client.WebSocketClient;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.function.Consumer;
 
 @Slf4j
 public abstract class BaseWebSocketSessionClient implements WebSocketHandler {
@@ -20,7 +20,6 @@ public abstract class BaseWebSocketSessionClient implements WebSocketHandler {
     private final WebSocketClient webSocketClient;
     private final ConnectionStateManager connectionState;
     private final ReconnectionManager reconnectionManager;
-    private final WebSocketMessageHandler messageHandler;
     private final WebSocketMessageSender messageSender;
     private final int messageSizeLimit;
 
@@ -29,7 +28,6 @@ public abstract class BaseWebSocketSessionClient implements WebSocketHandler {
                                          WebSocketClient webSocketClient,
                                          ConnectionStateManager connectionState,
                                          ReconnectionManager reconnectionManager,
-                                         WebSocketMessageHandler messageHandler,
                                          WebSocketMessageSender messageSender,
                                          WebSocketSessionHolder sessionHolder) {
         this.serverUri = serverUri;
@@ -37,7 +35,6 @@ public abstract class BaseWebSocketSessionClient implements WebSocketHandler {
         this.webSocketClient = webSocketClient;
         this.connectionState = connectionState;
         this.reconnectionManager = reconnectionManager;
-        this.messageHandler = messageHandler;
         this.messageSender = messageSender;
         this.sessionHolder = sessionHolder;
     }
@@ -75,8 +72,11 @@ public abstract class BaseWebSocketSessionClient implements WebSocketHandler {
 
     @Override
     public void handleMessage(WebSocketSession session, WebSocketMessage<?> message) {
-        Consumer<String> consumer = this::processMessage;
-        messageHandler.handleMessage(message, consumer, serverUri);
+        if (message instanceof TextMessage textMessage) {
+            var payload = textMessage.getPayload();
+            log.debug("Received message from {}: {}", serverUri, payload.substring(0, Math.min(200, payload.length())));
+            processMessage(payload);
+        }
     }
 
     @Override
@@ -97,7 +97,7 @@ public abstract class BaseWebSocketSessionClient implements WebSocketHandler {
     }
 
     protected void sendMessage(String message) {
-        messageSender.sendMessage(sessionHolder.getSessionIfOpen(), message, serverUri, this::connect);
+        messageSender.send(sessionHolder.getSessionIfOpen(), message, serverUri, this::connect);
     }
 
     protected abstract void onConnectionEstablished(WebSocketSession session);
@@ -117,14 +117,7 @@ public abstract class BaseWebSocketSessionClient implements WebSocketHandler {
     }
 
     private void closeSession() {
-        WebSocketSession session = sessionHolder.getSessionIfOpen();
-        if (session != null) {
-            try {
-                session.close(CloseStatus.NORMAL);
-            } catch (IOException e) {
-                log.error("Error closing WebSocket session for {}", serverUri, e);
-            }
-        }
+        sessionHolder.closeIfOpen(CloseStatus.NORMAL, serverUri);
     }
     private boolean isConnected() {
         return connectionState.isConnected() && sessionHolder.isOpen();

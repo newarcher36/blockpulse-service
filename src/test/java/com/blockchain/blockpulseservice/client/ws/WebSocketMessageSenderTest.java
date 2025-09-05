@@ -28,7 +28,7 @@ class WebSocketMessageSenderTest {
     void doesNothingWhenSessionIsNull() {
         Runnable failure = mock(Runnable.class);
 
-        sender.sendMessage(null, "hello", SERVER_URI, failure);
+        sender.send(null, "hello", SERVER_URI, failure);
 
         verifyNoInteractions(failure);
     }
@@ -38,7 +38,7 @@ class WebSocketMessageSenderTest {
         when(session.isOpen()).thenReturn(false);
         var failure = mock(Runnable.class);
 
-        sender.sendMessage(session, "hello", SERVER_URI, failure);
+        sender.send(session, "hello", SERVER_URI, failure);
 
         verify(session, never()).sendMessage(any());
         verifyNoInteractions(failure);
@@ -49,7 +49,7 @@ class WebSocketMessageSenderTest {
         when(session.isOpen()).thenReturn(true);
         var failure = mock(Runnable.class);
 
-        sender.sendMessage(session, "hello", SERVER_URI, failure);
+        sender.send(session, "hello", SERVER_URI, failure);
 
         verify(session).sendMessage(msgCaptor.capture());
         assertThat(msgCaptor.getValue().getPayload()).isEqualTo("hello");
@@ -62,7 +62,7 @@ class WebSocketMessageSenderTest {
         doThrow(new IOException("boom")).when(session).sendMessage(any());
         var failure = mock(Runnable.class);
 
-        sender.sendMessage(session, "hello", SERVER_URI, failure);
+        sender.send(session, "hello", SERVER_URI, failure);
 
         verify(failure, times(1)).run();
     }

@@ -29,7 +29,6 @@ public class MempoolSpaceWebSocketClient extends BaseWebSocketSessionClient {
                                        WebSocketClient webSocketClient,
                                        ConnectionStateManager connectionState,
                                        ReconnectionManager reconnectionManager,
-                                       WebSocketMessageHandler messageHandler,
                                        WebSocketMessageSender messageSender,
                                        WebSocketSessionHolder sessionHolder,
                                        @Value("${app.mempool.space.websocket.track-mempool-api-url}") String serverUri,
@@ -41,7 +40,6 @@ public class MempoolSpaceWebSocketClient extends BaseWebSocketSessionClient {
                 webSocketClient,
                 connectionState,
                 reconnectionManager,
-                messageHandler,
                 messageSender,
                 sessionHolder);
         this.transactionMapper = transactionMapper;
@@ -64,15 +62,11 @@ public class MempoolSpaceWebSocketClient extends BaseWebSocketSessionClient {
         try {
             var txWrapper = objectMapper.readValue(message, MempoolTransactionsDTOWrapper.class);
             var mempoolTransactions = txWrapper.mempoolTransactions();
-            if (mempoolTransactions != null) {
-                var txs = transactionMapper.mapToTransaction(mempoolTransactions.added());
-                for (var tx : txs) {
-                    eventPublisher.publishEvent(new NewTransactionEvent(tx));
-                }
-            }
+            transactionMapper
+                    .mapToTransaction(mempoolTransactions.added())
+                    .forEach(tx -> eventPublisher.publishEvent(new NewTransactionEvent(tx)));
         } catch (Exception e) {
             log.error("Error processing blockchain.info message: {}", message, e);
         }
     }
-
 }

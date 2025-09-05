@@ -12,10 +12,10 @@ import java.math.BigDecimal;
 @Slf4j
 @Component
 public class SurgeFeeAnalyzer extends BaseFeeAnalyzer {
-    private final double mempoolSizeFullThreshold;
+    private final double mempoolSizeCongestionThreshold;
 
-    public SurgeFeeAnalyzer(@Value("${app.analysis.tx.mempool-congestion-vbytes-threshold}") double mempoolSizeFullThreshold) {
-        this.mempoolSizeFullThreshold = mempoolSizeFullThreshold;
+    public SurgeFeeAnalyzer(@Value("${app.analysis.tx.mempool-congestion-vbytes-threshold}") double mempoolSizeCongestionThreshold) {
+        this.mempoolSizeCongestionThreshold = mempoolSizeCongestionThreshold;
     }
 
     @Override
@@ -25,7 +25,7 @@ public class SurgeFeeAnalyzer extends BaseFeeAnalyzer {
         var upperEndpoint = context.getFeeWindowStatsSummary().tukeyFences().upperEndpoint();
         var isSurge = isBeyondUpperFence(feePerVSize, upperEndpoint) &&
                 isFarBeyondRecommendedFastFee(feePerVSize, mempoolStats.fastFeePerVByte()) &&
-                mempoolIsFull(mempoolStats);
+                isMempoolCongested(mempoolStats);
         if (isSurge) {
             log.debug("Surge detected for tx: {}", context.getNewTransaction().hash());
             return context.toBuilder()
@@ -43,7 +43,7 @@ public class SurgeFeeAnalyzer extends BaseFeeAnalyzer {
         return isBeyondUpperFence(feePerVSize, BigDecimal.valueOf(fastFeePerVByte));
     }
 
-    private boolean mempoolIsFull(MempoolStats mempoolStats) {
-        return mempoolStats.mempoolSize() >= mempoolSizeFullThreshold;
+    private boolean isMempoolCongested(MempoolStats mempoolStats) {
+        return mempoolStats.mempoolSize() >= mempoolSizeCongestionThreshold;
     }
 }

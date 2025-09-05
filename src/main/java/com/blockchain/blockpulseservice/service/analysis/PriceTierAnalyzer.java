@@ -8,13 +8,13 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class PriceTierAnalyzer extends BaseFeeAnalyzer {
-    private final int mempoolSizeThreshold;
+    private final int mempoolSizeCongestionThreshold;
     private final PriceTierClassifier classifier;
 
     public PriceTierAnalyzer(@Value("${app.analysis.tx.mempool-congestion-vbytes-threshold}")
-                             int mempoolSizeThreshold,
+                             int mempoolSizeCongestionThreshold,
                              PriceTierClassifier classifier) {
-        this.mempoolSizeThreshold = mempoolSizeThreshold;
+        this.mempoolSizeCongestionThreshold = mempoolSizeCongestionThreshold;
         this.classifier = classifier;
     }
 
@@ -38,6 +38,6 @@ public class PriceTierAnalyzer extends BaseFeeAnalyzer {
     }
 
     private boolean isMempoolCongested(MempoolStats mempool) {
-        return mempool.mempoolSize() > mempoolSizeThreshold;
+        return mempool.mempoolSize() > mempoolSizeCongestionThreshold;
     }
 }
