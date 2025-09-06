@@ -14,9 +14,9 @@ public class PriceTierClassifier {
         var fast = BigDecimal.valueOf(stats.fastFeePerVByte());
         var medium = BigDecimal.valueOf(stats.mediumFeePerVByte());
 
-        if (fee.compareTo(fast) > 0) return PriceTier.CHEAP;
-        if (fee.compareTo(medium) <= 0) return PriceTier.NORMAL;
-        return PriceTier.EXPENSIVE;
+        if (fee.compareTo(fast) > 0) return PriceTier.EXPENSIVE;
+        if (fee.compareTo(medium) >= 0) return PriceTier.NORMAL;
+        return PriceTier.CHEAP;
     }
 
     public PriceTier classifyUsingIqr(BigDecimal fee, Range<BigDecimal> iqr) {

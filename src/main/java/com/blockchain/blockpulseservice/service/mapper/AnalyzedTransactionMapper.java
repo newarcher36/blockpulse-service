@@ -19,7 +19,7 @@ public class AnalyzedTransactionMapper {
 
     public AnalyzedTransactionEvent map(AnalysisContext context) {
         return AnalyzedTransactionEvent.builder()
-                .id(context.getNewTransaction().hash())
+                .id(context.getNewTransaction().id())
                 .producedAt(Instant.now(clock))
                 .feePerVByte(context.getNewTransaction().feePerVSize())
                 .totalFee(context.getNewTransaction().totalFee())

@@ -52,7 +52,7 @@ class PriceTierAnalyzerTest {
     }
 
     @Test
-    void analyzePriceWithMempoolThresholdsWhenCongested() {
+    void analyzePriceWithMempoolStatsWhenCongested() {
         var fee = new BigDecimal("0");
         var mempoolSizeCongested = MEMPOOL_SIZE_THRESHOLD + 1;
         var baseCtx = baseContext(fee, mempoolSizeCongested);

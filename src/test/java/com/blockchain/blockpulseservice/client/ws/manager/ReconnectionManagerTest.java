@@ -22,19 +22,20 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ReconnectionManagerTest {
-
-    @Mock private ScheduledExecutorService scheduler;
-    @Mock private RetryTemplate retryTemplate;
-    @Mock private ScheduledFuture<?> scheduledFuture;
-
-    @InjectMocks private ReconnectionManager manager;
-
+    @Mock
+    private ScheduledExecutorService scheduler;
+    @Mock
+    private RetryTemplate retryTemplate;
+    @Mock
+    private ScheduledFuture<?> scheduledFuture;
+    @InjectMocks
+    private ReconnectionManager manager;
     private final URI serverUri = URI.create("wss://example.test/ws");
 
     @BeforeEach
     void setup() {
-        when(scheduler.schedule(any(Runnable.class), anyLong(), any(TimeUnit.class)))
-                .thenReturn(scheduledFuture);
+//        when(scheduler.schedule(any(Runnable.class), anyLong(), any(TimeUnit.class)))
+//                .thenReturn(scheduledFuture);
     }
 
     @Test

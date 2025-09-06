@@ -25,7 +25,7 @@ public class TransactionAnalyzerService {
     private final AtomicReference<MempoolStats> mempoolStats = new AtomicReference<>(MempoolStats.empty());
 
     public void processTransaction(Transaction transaction, FeeWindowStatsSummary feeWindowStatsSummary) {
-        log.debug("Processing transaction: {}", transaction.hash());
+        log.debug("Processing transaction: {}", transaction.id());
         var context = AnalysisContext.builder()
                 .newTransaction(transaction)
                 .feeWindowStatsSummary(feeWindowStatsSummary)

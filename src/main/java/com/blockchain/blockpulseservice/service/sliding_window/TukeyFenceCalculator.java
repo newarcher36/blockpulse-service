@@ -31,8 +31,10 @@ public class TukeyFenceCalculator {
         var iqr = q3.subtract(q1);
         var range = iqr.multiply(BigDecimal.valueOf(k));
         var lower = q1.subtract(range);
+        if (lower.signum() < 0) {
+            lower = BigDecimal.ZERO;
+        }
         var upper = q3.add(range);
         return Range.closed(lower, upper);
     }
 }
-

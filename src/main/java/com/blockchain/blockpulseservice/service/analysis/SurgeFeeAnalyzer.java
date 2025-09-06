@@ -27,7 +27,7 @@ public class SurgeFeeAnalyzer extends BaseFeeAnalyzer {
                 isFarBeyondRecommendedFastFee(feePerVSize, mempoolStats.fastFeePerVByte()) &&
                 isMempoolCongested(mempoolStats);
         if (isSurge) {
-            log.debug("Surge detected for tx: {}", context.getNewTransaction().hash());
+            log.debug("Surge detected for tx: {}", context.getNewTransaction().id());
             return context.toBuilder()
                     .pattern(PatternType.SURGE)
                     .build();

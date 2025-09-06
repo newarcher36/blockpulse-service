@@ -13,7 +13,7 @@ class PriceTierClassifierTest {
     private final PriceTierClassifier classifier = new PriceTierClassifier();
 
     @Test
-    void classifyUsingMempool_cases() {
+    void classifyUsingMempoolStats() {
         var stats = MempoolStats.builder()
                 .fastFeePerVByte(50)
                 .mediumFeePerVByte(25)
@@ -21,15 +21,16 @@ class PriceTierClassifierTest {
                 .mempoolSize(0)
                 .build();
 
-        assertEquals(PriceTier.CHEAP, classifier.classifyUsingMempool(new BigDecimal("60"), stats));
+        assertEquals(PriceTier.EXPENSIVE, classifier.classifyUsingMempool(new BigDecimal("51"), stats));
 
+        assertEquals(PriceTier.NORMAL, classifier.classifyUsingMempool(new BigDecimal("26"), stats));
         assertEquals(PriceTier.NORMAL, classifier.classifyUsingMempool(new BigDecimal("25"), stats));
 
-        assertEquals(PriceTier.EXPENSIVE, classifier.classifyUsingMempool(new BigDecimal("40"), stats));
+        assertEquals(PriceTier.CHEAP, classifier.classifyUsingMempool(new BigDecimal("24"), stats));
     }
 
     @Test
-    void classifyUsingIqr_cases() {
+    void classifyUsingIqrFromFeesWindow() {
         var iqr = Range.closed(new BigDecimal("10"), new BigDecimal("20"));
 
         assertEquals(PriceTier.CHEAP, classifier.classifyUsingIqr(new BigDecimal("9.99"), iqr));
