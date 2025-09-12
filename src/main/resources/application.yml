@@ -33,7 +33,7 @@ management:
 app:
   stream:
     sse:
-      sample-ms: 2000
+      sample-ms: 500
   scheduling:
     enabled: true
   mempool.space:
