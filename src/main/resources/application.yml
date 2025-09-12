@@ -1,0 +1,62 @@
+spring:
+  application:
+    name: blockpulse-service
+  threads:
+    virtual:
+      enabled: true
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+server:
+  port: 8080
+  compression:
+    enabled: true
+    mime-types: application/json,text/html,text/plain
+
+
+logging:
+  level:
+    com.blockchain.blockpulseservice: INFO
+    org.springframework.web.socket: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+app:
+  stream:
+    sse:
+      sample-ms: 2000
+  scheduling:
+    enabled: true
+  mempool.space:
+    rest:
+      fee-api-url: https://mempool.space/api/v1/fees/recommended
+      mempool-info-api-url: https://mempool.space/api/mempool
+    websocket:
+      track-mempool-api-url: wss://mempool.space/api/v1/ws
+      subscribe-message: '{ "track-mempool": true }'
+  websocket:
+    auto-start:
+      enabled: true
+    lifecycle:
+      phase: 0
+    message-size-limit: 16777216
+    reconnect-delay: 5000
+    max-reconnect-attempts: 10
+    reconnect:
+      max-attempts: 10
+      initial-delay-seconds: 5
+      max-delay-seconds: 30
+  analysis:
+    tx:
+      sliding-window-size: 1000
+      mempool-congestion-vbytes-threshold: 100
+      tukey-k: 1.5
