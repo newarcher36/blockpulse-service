@@ -1,0 +1,8 @@
+app:
+  scheduling:
+    enabled: false
+  websocket:
+    auto-start:
+      enabled: false
+    lifecycle:
+      phase: 0
