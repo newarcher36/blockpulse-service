@@ -200,3 +200,21 @@ The application exposes a REST API endpoint to provide live streaming of analyze
    docker build -t blockpulse-service .
    docker compose up
 ```
+
+##  Quick Start ⚡
+
+- Run with Docker (Compose):
+  ```bash
+  docker compose up --build
+  ```
+- Run with Docker (direct):
+  ```bash
+  docker build -t blockpulse-service:latest .
+  docker run -p 8080:8080 blockpulse-service:latest
+  ```
+- Stream API (SSE):
+  ```bash
+  curl -N -i -H "Accept: text/event-stream" http://localhost:8080/api/v1/transactions/stream
+  ```
+  - `-N` disables buffering so events stream continuously.
+  - Response uses `text/event-stream`.
