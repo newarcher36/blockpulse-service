@@ -70,7 +70,7 @@ public class MempoolSpaceWebSocketClient extends BaseWebSocketSessionClient {
                     .mapToTransaction(mempoolTransactions.added())
                     .forEach(tx -> eventPublisher.publishEvent(new NewTransactionEvent(tx)));
         } catch (Exception e) {
-            log.error("Error processing blockchain.info message: {}", message, e);
+            log.error("Error processing blockchain.info message: {}", message);
         }
     }
 }

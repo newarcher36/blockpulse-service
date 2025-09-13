@@ -155,6 +155,17 @@ class MempoolSpaceWebSocketClientTest {
     }
 
     @Test
+    void handleInvalidJsonDoesNotThrow() throws JsonProcessingException {
+        when(objectMapper.readValue(anyString(), eq(MempoolTransactionsDTOWrapper.class)))
+                .thenThrow(new JsonProcessingException("bad json") {});
+
+        mempoolSpaceWebSocketClient.handleMessage(null, new TextMessage("{invalid-json"));
+
+        verifyNoInteractions(transactionMapper);
+        verifyNoInteractions(eventPublisher);
+    }
+
+    @Test
     void handleTransportErrorClosesSession() {
         mempoolSpaceWebSocketClient.handleTransportError(null, new RuntimeException("boom"));
 
