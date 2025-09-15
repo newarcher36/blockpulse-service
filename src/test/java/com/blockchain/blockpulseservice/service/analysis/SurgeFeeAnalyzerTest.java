@@ -3,6 +3,7 @@ package com.blockchain.blockpulseservice.service.analysis;
 import com.blockchain.blockpulseservice.model.domain.AnalysisContext;
 import com.blockchain.blockpulseservice.model.domain.FeeWindowStatsSummary;
 import com.blockchain.blockpulseservice.model.domain.MempoolStats;
+import com.blockchain.blockpulseservice.model.domain.PatternSignal;
 import com.blockchain.blockpulseservice.model.domain.PatternType;
 import com.blockchain.blockpulseservice.model.domain.Transaction;
 import com.google.common.collect.Range;
@@ -13,6 +14,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import com.blockchain.blockpulseservice.model.domain.PatternMetric;
 
 class SurgeFeeAnalyzerTest {
     private static final int MEMPOOL_SIZE_FULL_THRESHOLD = 1000;
@@ -28,10 +30,17 @@ class SurgeFeeAnalyzerTest {
 
         var actualAnalysisContext = analyzer.analyze(ctx);
 
-        assertThat(actualAnalysisContext.getPatterns()).containsExactly(PatternType.SURGE);
+        assertThat(actualAnalysisContext.getPatternSignal())
+                .isNotNull()
+                .extracting(PatternSignal::type)
+                .isEqualTo(PatternType.SURGE);
+        assertThat(actualAnalysisContext.getPatternSignal().metrics())
+                .containsEntry(PatternMetric.UPPER_TUKEY_FENCE, 20.0)
+                .containsEntry(PatternMetric.MEMPOOL_RECOMMENDED_FEE_PER_VBYTE, recommendedFastFee)
+                .containsEntry(PatternMetric.MEMPOOL_SIZE, (double) mempoolSizeCongested);
         assertThat(actualAnalysisContext)
                 .usingRecursiveComparison()
-                .ignoringFields("patterns")
+                .ignoringFields("patternSignal")
                 .isEqualTo(ctx);
     }
 
@@ -44,7 +53,7 @@ class SurgeFeeAnalyzerTest {
 
         var actualAnalysisContext = analyzer.analyze(ctx);
 
-        assertThat(actualAnalysisContext.getPatterns()).isEmpty();
+        assertThat(actualAnalysisContext.getPatternSignal()).isNull();
         assertThat(actualAnalysisContext).isEqualTo(ctx);
     }
 
@@ -57,7 +66,7 @@ class SurgeFeeAnalyzerTest {
 
         var actualAnalysisContext = analyzer.analyze(ctx);
 
-        assertThat(actualAnalysisContext.getPatterns()).isEmpty();
+        assertThat(actualAnalysisContext.getPatternSignal()).isNull();
         assertThat(actualAnalysisContext).isEqualTo(ctx);
     }
 
@@ -70,7 +79,7 @@ class SurgeFeeAnalyzerTest {
 
         var actualAnalysisContext = analyzer.analyze(ctx);
 
-        assertThat(actualAnalysisContext.getPatterns()).isEmpty();
+        assertThat(actualAnalysisContext.getPatternSignal()).isNull();
         assertThat(actualAnalysisContext).isEqualTo(ctx);
     }
 

@@ -3,24 +3,31 @@ package com.blockchain.blockpulseservice.service.mapper;
 import com.blockchain.blockpulseservice.model.domain.AnalysisContext;
 import com.blockchain.blockpulseservice.model.domain.FeeWindowStatsSummary;
 import com.blockchain.blockpulseservice.model.domain.MempoolStats;
+import com.blockchain.blockpulseservice.model.domain.PatternMetric;
+import com.blockchain.blockpulseservice.model.domain.PatternSignal;
 import com.blockchain.blockpulseservice.model.domain.PatternType;
 import com.blockchain.blockpulseservice.model.domain.PriceTier;
 import com.blockchain.blockpulseservice.model.domain.Transaction;
 import com.google.common.collect.Range;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.Set;
+import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AnalyzedTransactionMapperTest {
-    @Test
-    void mapsAnalysisContextToEvent_usingInjectedClock() {
+
+    @ParameterizedTest
+    @MethodSource("patternSignalProvider")
+    void mapsAnalysisContextToEvent(PatternSignal patternSignal) {
         var fixedNow = Instant.parse("2024-01-02T03:04:05Z");
         var clock = Clock.fixed(fixedNow, ZoneOffset.UTC);
         var txTime = Instant.parse("2024-01-01T00:00:00Z");
@@ -49,8 +56,8 @@ class AnalyzedTransactionMapperTest {
                         .mempoolSize(1000)
                         .build())
                 .priceTier(PriceTier.NORMAL)
+                .patternSignal(patternSignal)
                 .isOutlier(true)
-                .patterns(Set.of(PatternType.SURGE, PatternType.SCAM))
                 .build();
 
         var event = new AnalyzedTransactionMapper(clock).map(context);
@@ -61,7 +68,7 @@ class AnalyzedTransactionMapperTest {
         assertEquals(new BigDecimal("1000"), event.totalFee());
         assertEquals(225, event.txSize());
         assertEquals(txTime, event.timestamp());
-        assertEquals(Set.of(PatternType.SURGE, PatternType.SCAM), event.patternTypes());
+        assertEquals(patternSignal, event.patternSignal());
         assertEquals(PriceTier.NORMAL, event.priceTier());
         assertTrue(event.isOutlier());
 
@@ -70,5 +77,11 @@ class AnalyzedTransactionMapperTest {
         assertEquals(2, dto.outliersCount());
         assertEquals(new BigDecimal("15.50"), dto.avgFeePerVByte());
         assertEquals(new BigDecimal("14.00"), dto.medianFeePerVByte());
+    }
+
+    private static Stream<Arguments> patternSignalProvider() {
+        return Stream.of(Arguments.of(new PatternSignal(PatternType.SURGE, Map.of(PatternMetric.UPPER_TUKEY_FENCE, 25.0))),
+                Arguments.of((PatternSignal) null)
+        );
     }
 }

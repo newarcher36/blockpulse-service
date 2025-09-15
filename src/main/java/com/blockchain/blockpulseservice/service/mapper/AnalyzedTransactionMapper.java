@@ -18,18 +18,22 @@ public class AnalyzedTransactionMapper {
     }
 
     public AnalyzedTransactionEvent map(AnalysisContext context) {
-        return AnalyzedTransactionEvent.builder()
+        var builder = AnalyzedTransactionEvent.builder()
                 .id(context.getNewTransaction().id())
                 .producedAt(Instant.now(clock))
                 .feePerVByte(context.getNewTransaction().feePerVSize())
                 .totalFee(context.getNewTransaction().totalFee())
                 .txSize(context.getNewTransaction().vSize())
                 .timestamp(context.getNewTransaction().time())
-                .patternTypes(context.getPatterns())
                 .priceTier(context.getPriceTier())
                 .isOutlier(context.isOutlier())
-                .windowSnapshot(mapToTransactionWindowSnapshotDTO(context.getFeeWindowStatsSummary()))
-                .build();
+                .windowSnapshot(mapToTransactionWindowSnapshotDTO(context.getFeeWindowStatsSummary()));
+
+        if (context.getPatternSignal() != null) {
+            builder.patternSignal(context.getPatternSignal());
+        }
+
+        return builder.build();
     }
 
     private TransactionWindowSnapshotDTO mapToTransactionWindowSnapshotDTO(FeeWindowStatsSummary windowSnapshot) {

@@ -1,7 +1,9 @@
 package com.blockchain.blockpulseservice.controller;
 
-import com.blockchain.blockpulseservice.model.domain.PatternType;
 import com.blockchain.blockpulseservice.model.domain.PriceTier;
+import com.blockchain.blockpulseservice.model.domain.PatternSignal;
+import com.blockchain.blockpulseservice.model.domain.PatternMetric;
+import com.blockchain.blockpulseservice.model.domain.PatternType;
 import com.blockchain.blockpulseservice.model.dto.TransactionWindowSnapshotDTO;
 import com.blockchain.blockpulseservice.model.event.AnalyzedTransactionEvent;
 import com.blockchain.blockpulseservice.service.stream.AnalysisStream;
@@ -17,8 +19,8 @@ import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
+import java.util.Map;
 import java.time.Instant;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -44,7 +46,7 @@ class AnalysisControllerIT {
                 .totalFee(new BigDecimal("1550"))
                 .txSize(100)
                 .timestamp(Instant.now())
-                .patternTypes(Set.of(PatternType.SURGE))
+                .patternSignal(new PatternSignal(PatternType.SURGE, Map.of(PatternMetric.UPPER_TUKEY_FENCE, 30.0)))
                 .priceTier(PriceTier.NORMAL)
                 .isOutlier(false)
                 .windowSnapshot(new TransactionWindowSnapshotDTO(10, 0, BigDecimal.ZERO, BigDecimal.ZERO))

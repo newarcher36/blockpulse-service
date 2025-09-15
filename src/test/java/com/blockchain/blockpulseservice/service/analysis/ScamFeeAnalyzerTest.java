@@ -11,32 +11,35 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import com.blockchain.blockpulseservice.model.domain.PatternMetric;
+import static org.assertj.core.api.Assertions.assertThat;
 
-class SpamFeeAnalyzerTest {
+class ScamFeeAnalyzerTest {
     private static final Range<BigDecimal> TUKEY_FENCES_LOW_5_HIGH_20 = Range.closed(new BigDecimal("5"), new BigDecimal("20"));
-    private final SpamFeeAnalyzer analyzer = new SpamFeeAnalyzer();
+    private final ScamFeeAnalyzer analyzer = new ScamFeeAnalyzer();
 
     @Test
     void addsScamPatternWhenBelowLowerFence() {
         var statsSummary = summary(TUKEY_FENCES_LOW_5_HIGH_20);
         var analysisContext = analyzer.analyze(ctx(new BigDecimal("4.99"), statsSummary));
-        assertTrue(analysisContext.getPatterns().contains(PatternType.SCAM));
+        assertThat(analysisContext.getPatternSignal()).isNotNull();
+        assertThat(analysisContext.getPatternSignal().type()).isEqualTo(PatternType.SCAM);
+        assertThat(analysisContext.getPatternSignal().metrics())
+                .containsEntry(PatternMetric.LOWER_TUKEY_FENCE, 5.0);
     }
 
     @Test
     void doesNotAddScamWhenEqualsLowerFence() {
         var statsSummary = summary(TUKEY_FENCES_LOW_5_HIGH_20);
         var analysisContext = analyzer.analyze(ctx(new BigDecimal("5.00"), statsSummary));
-        assertFalse(analysisContext.getPatterns().contains(PatternType.SCAM));
+        assertThat(analysisContext.getPatternSignal()).isNull();
     }
 
     @Test
     void doesNotAddScamWhenAboveLowerFence() {
         var statsSummary = summary(TUKEY_FENCES_LOW_5_HIGH_20);
         var analysisContext = analyzer.analyze(ctx(new BigDecimal("10.00"), statsSummary));
-        assertFalse(analysisContext.getPatterns().contains(PatternType.SCAM));
+        assertThat(analysisContext.getPatternSignal()).isNull();
     }
 
     private static FeeWindowStatsSummary summary(Range<BigDecimal> tukeyFences) {
