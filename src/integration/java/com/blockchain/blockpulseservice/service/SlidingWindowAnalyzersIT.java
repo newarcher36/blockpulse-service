@@ -2,6 +2,8 @@ package com.blockchain.blockpulseservice.service;
 
 import com.blockchain.blockpulseservice.BaseIT;
 import com.blockchain.blockpulseservice.model.domain.MempoolStats;
+import com.blockchain.blockpulseservice.model.domain.PatternMetric;
+import com.blockchain.blockpulseservice.model.domain.PatternSignal;
 import com.blockchain.blockpulseservice.model.domain.PatternType;
 import com.blockchain.blockpulseservice.model.domain.PriceTier;
 import com.blockchain.blockpulseservice.model.domain.Transaction;
@@ -20,6 +22,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
@@ -163,19 +166,15 @@ class SlidingWindowAnalyzersIT extends BaseIT {
     @Test
     void scamPatternEmittedWhenBelowLowerFence() {
         publisher.publishEvent(new MempoolStatsUpdatedEvent(MempoolStats.empty()));
-
         // Seed window
         List.of(
-                tx("s1", "10"),
-                tx("s2", "12"),
-                tx("s3", "15"),
-                tx("s4", "18"),
-                tx("s5", "20"),
-                tx("s6", "25")
-        ).forEach(tx -> publisher.publishEvent(new NewTransactionEvent(tx)));
-
-        // Low fee below lower fence should be marked as SCAM (assert mirrors previous expectation)
-        List.of(
+                tx("s1", "20"),
+                tx("s2", "22"),
+                tx("s3", "25"),
+                tx("s4", "28"),
+                tx("s5", "30"),
+                tx("s6", "35"),
+                // Low fee below lower fence should be marked as SCAM (assert mirrors previous expectation)
                 tx("tx-spam", "1")
         ).forEach(tx -> publisher.publishEvent(new NewTransactionEvent(tx)));
 
@@ -183,8 +182,12 @@ class SlidingWindowAnalyzersIT extends BaseIT {
 
         var events = analyzedTransactionEventCaptor.getAllValues();
         assertThat(events)
-                .extracting(AnalyzedTransactionEvent::id, ev -> ev.patternTypes().contains(PatternType.SCAM))
-                .contains(tuple("tx-spam", false));
+                .filteredOn(ev -> ev.id().equals("tx-spam"))
+                .singleElement()
+                .extracting(AnalyzedTransactionEvent::patternSignal)
+                .isNotNull()
+                .extracting(PatternSignal::type, PatternSignal::metrics)
+                .containsExactly(PatternType.SCAM, Map.of(PatternMetric.LOWER_TUKEY_FENCE, 9.0));
     }
 
     private static Transaction tx(String id, String fee) {

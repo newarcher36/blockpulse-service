@@ -134,7 +134,7 @@ class GetAnalyzedTransactionEventsIT extends BaseIT {
                     assertThat(tx.totalFee()).isEqualByComparingTo("2000");
                     assertThat(tx.txSize()).isEqualTo(200);
                     assertThat(tx.timestamp()).isEqualTo(Instant.parse("1970-01-01T00:00:10Z"));
-                    assertThat(tx.patternTypes()).isEmpty();
+                    assertThat(tx.patternSignal()).isNull();
                     assertThat(tx.priceTier()).isEqualTo(PriceTier.EXPENSIVE);
                     assertThat(tx.isOutlier()).isFalse();
                 })

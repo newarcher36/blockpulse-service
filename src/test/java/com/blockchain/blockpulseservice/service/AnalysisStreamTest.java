@@ -1,8 +1,10 @@
 package com.blockchain.blockpulseservice.service;
 
 import com.blockchain.blockpulseservice.service.stream.AnalysisStream;
-import com.blockchain.blockpulseservice.model.domain.PatternType;
 import com.blockchain.blockpulseservice.model.domain.PriceTier;
+import com.blockchain.blockpulseservice.model.domain.PatternSignal;
+import com.blockchain.blockpulseservice.model.domain.PatternMetric;
+import com.blockchain.blockpulseservice.model.domain.PatternType;
 import com.blockchain.blockpulseservice.model.dto.TransactionWindowSnapshotDTO;
 import com.blockchain.blockpulseservice.model.event.AnalyzedTransactionEvent;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,9 +12,9 @@ import org.junit.jupiter.api.Test;
 import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
+import java.util.Map;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Set;
 
 class AnalysisStreamTest {
     private static final int REPLAY_LIMIT = 2;
@@ -102,7 +104,7 @@ class AnalysisStreamTest {
                 .totalFee(new BigDecimal("1234"))
                 .txSize(200)
                 .timestamp(Instant.now())
-                .patternTypes(Set.of(PatternType.SURGE))
+                .patternSignal(new PatternSignal(PatternType.SURGE, Map.of(PatternMetric.UPPER_TUKEY_FENCE, 20.0)))
                 .priceTier(PriceTier.NORMAL)
                 .isOutlier(false)
                 .windowSnapshot(new TransactionWindowSnapshotDTO(10, 0, BigDecimal.ZERO, BigDecimal.ZERO))

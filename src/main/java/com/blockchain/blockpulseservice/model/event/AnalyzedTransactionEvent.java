@@ -1,13 +1,12 @@
 package com.blockchain.blockpulseservice.model.event;
 
 import com.blockchain.blockpulseservice.model.domain.PriceTier;
-import com.blockchain.blockpulseservice.model.domain.PatternType;
+import com.blockchain.blockpulseservice.model.domain.PatternSignal;
 import com.blockchain.blockpulseservice.model.dto.TransactionWindowSnapshotDTO;
 import lombok.Builder;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.Set;
 
 @Builder
 public record AnalyzedTransactionEvent(String id,
@@ -16,7 +15,7 @@ public record AnalyzedTransactionEvent(String id,
                                        BigDecimal totalFee,
                                        int txSize,
                                        Instant timestamp,
-                                       Set<PatternType> patternTypes,
+                                       PatternSignal patternSignal,
                                        PriceTier priceTier,
                                        boolean isOutlier,
                                        TransactionWindowSnapshotDTO windowSnapshot) {}
