@@ -9,6 +9,15 @@ ingestion, business logic, and presentation.
 
 ------------------------------------------------------------------------
 
+
+##  Live Demo on AWS 🌐
+
+- URL: https://d3q8hndklwuv8q.cloudfront.net
+- App Runner (`blockpulse-service`): runs the Docker container image for the backend service with managed deployment and auto‑scaling.
+- Amazon S3 + CloudFront: delivers a global, low‑latency edge endpoint; S3 stores static assets while CloudFront fronts and routes requests to the backend service.
+
+Open the link above to see the service in action.
+
 ##  What This Application Does 🎯
 
 Bitcoin block space is scarce. Every \~10 minutes miners choose which
