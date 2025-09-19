@@ -1,0 +1,127 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Blockpulse Service deployment to App Runner Service'
+
+Parameters:
+  ECRImageURI:
+    Type: String
+    Description: ECR Image URI
+
+  ServiceName:
+    Type: String
+    Description: App Runner Service Name
+    Default: "blockpulse-service"
+
+  Environment:
+    Type: String
+    Description: Environment name
+    Default: "prod"
+    AllowedValues: [dev, staging, prod]
+
+  InstanceCpu:
+    Type: String
+    Description: CPU allocation
+    Default: "2 vCPU"
+    AllowedValues: ["0.25 vCPU", "0.5 vCPU", "1 vCPU", "2 vCPU"]
+
+  InstanceMemory:
+    Type: String
+    Description: Memory allocation
+    Default: "1 GB"
+    AllowedValues: ["0.5 GB", "1 GB", "2 GB", "3 GB", "4 GB"]
+
+Conditions:
+  IsProduction: !Equals [!Ref Environment, "prod"]
+
+Resources:
+  # IAM Role for ECR Access
+  AppRunnerECRAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ServiceName}-${Environment}-ecr-access-role"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: build.apprunner.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: !Ref ServiceName
+
+  # Auto Scaling Configuration
+  AppRunnerAutoScalingConfig:
+    Type: AWS::AppRunner::AutoScalingConfiguration
+    Properties:
+      AutoScalingConfigurationName: !Sub "${ServiceName}-${Environment}-AS"
+      MaxConcurrency: !If [IsProduction, 100, 50]
+      MaxSize: !If [IsProduction, 10, 3]
+      MinSize: 1
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: !Ref ServiceName
+
+  # App Runner Service
+  AppRunnerService:
+    Type: AWS::AppRunner::Service
+    Properties:
+      ServiceName: !Sub "${ServiceName}-${Environment}"
+      SourceConfiguration:
+        AuthenticationConfiguration:
+          AccessRoleArn: !GetAtt AppRunnerECRAccessRole.Arn
+        AutoDeploymentsEnabled: true
+        ImageRepository:
+          ImageIdentifier: !Ref ECRImageURI
+          ImageRepositoryType: ECR
+          ImageConfiguration:
+            Port: "8080"
+            RuntimeEnvironmentVariables:
+              - Name: SPRING_PROFILES_ACTIVE
+                Value: !Ref Environment
+              - Name: SERVER_PORT
+                Value: "8080"
+              - Name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+                Value: "health,info,metrics"
+      InstanceConfiguration:
+        Cpu: !Ref InstanceCpu
+        Memory: !Ref InstanceMemory
+      HealthCheckConfiguration:
+        Protocol: HTTP
+        Path: "/actuator/health"
+        Interval: 20
+        Timeout: 5
+        HealthyThreshold: 1
+        UnhealthyThreshold: 5
+      AutoScalingConfigurationArn: !Ref AppRunnerAutoScalingConfig
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: !Ref ServiceName
+        - Key: ManagedBy
+          Value: CloudFormation
+
+Outputs:
+  ServiceUrl:
+    Description: App Runner Service URL
+    Value: !GetAtt AppRunnerService.ServiceUrl
+    Export:
+      Name: !Sub "${AWS::StackName}-ServiceUrl"
+
+  ServiceArn:
+    Description: App Runner Service ARN
+    Value: !GetAtt AppRunnerService.ServiceArn
+    Export:
+      Name: !Sub "${AWS::StackName}-ServiceArn"
+
+  ServiceId:
+    Description: App Runner Service ID
+    Value: !GetAtt AppRunnerService.ServiceId
+    Export:
+      Name: !Sub "${AWS::StackName}-ServiceId"
